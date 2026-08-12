@@ -121,26 +121,32 @@ svg.map.dragging{cursor:grabbing}
 .sheet.open{display:block}
 .sheet-bg{position:absolute;inset:0;background:rgba(22,40,63,.42);backdrop-filter:blur(3px)}
 .sheet-in{
-  position:absolute;top:0;right:0;bottom:0;width:min(560px,100%);
-  background:var(--land);border-left:1.5px solid var(--ink);overflow-y:auto;
-  animation:slide .38s cubic-bezier(.3,.9,.3,1);
+  position:absolute;inset:0;
+  background:var(--land);overflow-y:auto;
+  animation:rise .34s cubic-bezier(.3,.9,.3,1);
 }
-@keyframes slide{from{transform:translateX(100%)}to{transform:none}}
-.sheet-head{padding:26px 32px;border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:sticky;top:0;background:var(--land);z-index:2}
-.sheet-head h2{font-family:"Hahmlet",serif;font-weight:700;font-size:36px;line-height:1.05}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.sheet-head{padding:22px clamp(20px,4vw,56px);border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:sticky;top:0;background:var(--land);z-index:2}
+.sheet-head h2{font-family:"Hahmlet",serif;font-weight:700;font-size:clamp(30px,3.4vw,48px);line-height:1.05}
 .sheet-head p{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-soft);margin-top:6px}
-.closebtn{font:inherit;font-size:22px;line-height:1;background:none;border:1.5px solid var(--ink);width:38px;height:38px;cursor:pointer;color:var(--ink);flex-shrink:0}
+.closebtn{font:inherit;font-size:24px;line-height:1;background:none;border:1.5px solid var(--ink);width:44px;height:44px;cursor:pointer;color:var(--ink);flex-shrink:0}
 .closebtn:hover{background:var(--ink);color:var(--land)}
-.sheet-body{padding:28px 32px 60px}
-.sec-lab{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;color:var(--punch);border-bottom:1px solid var(--line);padding-bottom:8px;margin:36px 0 22px}
+.closewrap{flex-shrink:0}
+.esc{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.16em;color:var(--ink-soft);text-align:center;margin-top:5px}
+.sheet-body{
+  padding:32px clamp(20px,4vw,56px) 72px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));
+  gap:0 36px;align-items:start;
+}
+.sec-lab{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;color:var(--punch);border-bottom:1px solid var(--line);padding-bottom:8px;margin:26px 0 22px;grid-column:1/-1}
 .sec-lab:first-child{margin-top:0}
-.shop{border-left:2px solid var(--punch);padding-left:16px;margin-bottom:30px}
+.shop{border-left:2px solid var(--punch);padding-left:16px;margin-bottom:34px}
 .shop h3{font-family:"Hahmlet",serif;font-weight:500;font-size:22px}
 .shop .kind{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--ink-soft);margin:2px 0 9px}
 .shop p{font-size:14px;color:#33495C}
 .shop .again{display:inline-block;margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;border:1px solid var(--line);padding:3px 10px;color:var(--ink-soft)}
-.shop-imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
-.shop-imgs img{width:100%;height:170px;object-fit:cover;border:1.5px solid var(--ink);display:block;background:var(--sea)}
+.shop-imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:8px;margin-top:12px}
+.shop-imgs img{width:100%;aspect-ratio:4/3;max-height:250px;object-fit:cover;border:1.5px solid var(--ink);display:block;background:var(--sea)}
 
 @media (max-width:920px){
   body{height:auto;overflow:visible;display:block}
@@ -214,7 +220,10 @@ svg.map.dragging{cursor:grabbing}
   <div class="sheet-in">
     <div class="sheet-head">
       <div><h2 id="shTitle"></h2><p id="shSub"></p></div>
-      <button class="closebtn" data-close aria-label="닫기">×</button>
+      <div class="closewrap">
+        <button class="closebtn" data-close aria-label="닫기">×</button>
+        <p class="esc">ESC</p>
+      </div>
     </div>
     <div class="sheet-body" id="shBody"></div>
   </div>
