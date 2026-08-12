@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>찐로컬 맛집,여가 찐이다!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@300;500;700&family=IBM+Plex+Sans+KR:wght@300;400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#D9E3DA;
+  --land:#EDF2EC;
+  --sea:#CDDCD8;
+  --ink:#16283F;
+  --ink-soft:#5C6E75;
+  --punch:#B0313B;
+  --line:#9BAFA0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:repeating-linear-gradient(90deg,rgba(22,40,63,.03) 0 1px,transparent 1px 4px);
+  color:var(--ink);font-family:"IBM Plex Sans KR",sans-serif;font-weight:300;line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+}
+.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+
+/* ---------- 헤더 ---------- */
+header{border-bottom:1.5px solid var(--ink);padding:12px 26px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;flex-shrink:0}
+.brand{font-family:"Hahmlet",serif;font-weight:700;letter-spacing:.04em;font-size:16px}
+.brand b{color:var(--punch)}
+.brand small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:9.5px;letter-spacing:.22em;color:var(--ink-soft);margin-top:2px}
+.picker{display:flex;align-items:center;gap:10px}
+.picker label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-soft)}
+select{
+  font:inherit;font-size:14px;padding:8px 34px 8px 14px;cursor:pointer;
+  background:var(--land) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7'><path d='M0 0h11L5.5 7z' fill='%2316283F'/></svg>") no-repeat right 13px center;
+  border:1.5px solid var(--ink);color:var(--ink);border-radius:0;appearance:none;
+}
+select:focus-visible{outline:2px solid var(--punch);outline-offset:2px}
+
+/* ---------- 레이아웃 ---------- */
+.stage{display:grid;grid-template-columns:1fr 372px;flex:1;min-height:0}
+.mapbox{position:relative;border-right:1.5px solid var(--ink);overflow:hidden;background:var(--sea);min-height:0}
+svg.map{display:block;width:100%;height:100%;cursor:grab}
+svg.map.dragging{cursor:grabbing}
+#viewport{transition:transform .9s cubic-bezier(.4,0,.2,1)}
+.nomotion #viewport{transition:none}
+
+/* 지도 요소 */
+.nk{fill:#C4D2C9;stroke:var(--line);stroke-width:1}
+.sk{fill:var(--land);stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
+.dmz{stroke:var(--punch);stroke-width:1.4;stroke-dasharray:5 4;fill:none;opacity:.65}
+.route-bg{fill:none;stroke:var(--line);stroke-width:2.4;stroke-dasharray:6 5;stroke-linecap:round}
+.route-done{fill:none;stroke:var(--punch);stroke-width:2.6;stroke-linecap:round}
+.stn-hit{fill:transparent;cursor:pointer}
+.stn-dot{fill:var(--land);stroke:var(--ink);stroke-width:2;transition:fill .25s,stroke .25s}
+.stn-lab{font-family:"Hahmlet",serif;font-weight:500;font-size:14px;fill:var(--ink);pointer-events:none}
+.stn-sub{font-family:"IBM Plex Mono",monospace;font-size:7.5px;letter-spacing:.14em;fill:var(--ink-soft);pointer-events:none}
+.stn.visited .stn-dot{fill:var(--punch);stroke:var(--punch)}
+.stn.here .stn-dot{fill:var(--punch);stroke:var(--ink);stroke-width:2.6}
+.stn:hover .stn-dot{fill:var(--punch)}
+.stn:hover .stn-lab{fill:var(--punch)}
+.stn.here .ring{stroke:var(--punch);fill:none;stroke-width:1.4;opacity:.55;animation:pulse 2.2s ease-out infinite}
+@keyframes pulse{0%{r:9;opacity:.6}100%{r:22;opacity:0}}
+.jeju{fill:var(--land);stroke:var(--ink);stroke-width:1.2}
+.jeju-lab{font-family:"IBM Plex Mono",monospace;font-size:7px;letter-spacing:.16em;fill:var(--ink-soft)}
+.nk-lab{font-family:"IBM Plex Mono",monospace;font-size:8px;letter-spacing:.3em;fill:#8B9C90}
+
+/* 줌 컨트롤 */
+.zoom{position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;gap:-1px}
+.zoom button{
+  width:40px;height:40px;font:inherit;font-size:18px;cursor:pointer;
+  background:var(--land);border:1.5px solid var(--ink);margin-bottom:-1.5px;color:var(--ink);
+  display:grid;place-content:center;transition:background .18s,color .18s;
+}
+.zoom button:last-child{font-size:9px;letter-spacing:.08em;font-family:"IBM Plex Mono",monospace}
+.zlev{
+  width:40px;height:24px;display:grid;place-content:center;font-size:9px;letter-spacing:.02em;
+  background:var(--land);border:1.5px solid var(--ink);margin-bottom:-1.5px;color:var(--ink-soft);
+}
+.zoom button:hover{background:var(--ink);color:var(--land)}
+.hint{
+  position:absolute;left:16px;bottom:16px;font-family:"IBM Plex Mono",monospace;
+  font-size:9.5px;letter-spacing:.14em;color:var(--ink-soft);background:rgba(237,242,236,.85);
+  padding:6px 11px;border:1px solid var(--line);
+}
+
+/* ---------- 요약 패널 ---------- */
+.panel{background:var(--land);display:flex;flex-direction:column}
+.p-status{
+  padding:14px 24px;border-bottom:1.5px solid var(--ink);
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;color:var(--ink-soft);
+}
+.p-status b{color:var(--punch);font-weight:600}
+.p-body{padding:30px 24px;flex:1;min-height:0;overflow-y:auto}
+.p-seq{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;color:var(--ink-soft)}
+.p-name{font-family:"Hahmlet",serif;font-weight:700;font-size:52px;line-height:1.02;letter-spacing:-.02em;margin:8px 0 4px}
+.p-name b{color:var(--punch)}
+.p-line{font-size:13px;color:var(--ink-soft);letter-spacing:.02em}
+.p-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.p-facts div span{display:block;font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.18em;color:var(--ink-soft)}
+.p-facts div strong{font-family:"Hahmlet",serif;font-weight:500;font-size:17px}
+.p-facts div strong.sm{font-size:14px;line-height:1.3;display:inline-block;margin-top:3px}
+.p-memo{font-size:14px;color:#33495C;border-left:2px solid var(--punch);padding-left:14px;margin-bottom:24px}
+.p-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:26px}
+.p-tags span{border:1px solid var(--line);padding:5px 12px;font-size:12px;letter-spacing:.02em}
+.p-cta{
+  width:100%;font:inherit;font-size:13px;font-weight:600;letter-spacing:.1em;cursor:pointer;
+  background:var(--ink);color:var(--land);border:none;padding:15px;transition:background .2s;
+}
+.p-cta:hover{background:var(--punch)}
+.fade{animation:fade .45s ease}
+@keyframes fade{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+/* ---------- 상세 ---------- */
+.sheet{position:fixed;inset:0;z-index:90;display:none}
+.sheet.open{display:block}
+.sheet-bg{position:absolute;inset:0;background:rgba(22,40,63,.42);backdrop-filter:blur(3px)}
+.sheet-in{
+  position:absolute;top:0;right:0;bottom:0;width:min(560px,100%);
+  background:var(--land);border-left:1.5px solid var(--ink);overflow-y:auto;
+  animation:slide .38s cubic-bezier(.3,.9,.3,1);
+}
+@keyframes slide{from{transform:translateX(100%)}to{transform:none}}
+.sheet-head{padding:26px 32px;border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:sticky;top:0;background:var(--land);z-index:2}
+.sheet-head h2{font-family:"Hahmlet",serif;font-weight:700;font-size:36px;line-height:1.05}
+.sheet-head p{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-soft);margin-top:6px}
+.closebtn{font:inherit;font-size:22px;line-height:1;background:none;border:1.5px solid var(--ink);width:38px;height:38px;cursor:pointer;color:var(--ink);flex-shrink:0}
+.closebtn:hover{background:var(--ink);color:var(--land)}
+.sheet-body{padding:28px 32px 60px}
+.sec-lab{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;color:var(--punch);border-bottom:1px solid var(--line);padding-bottom:8px;margin:36px 0 22px}
+.sec-lab:first-child{margin-top:0}
+.shop{border-left:2px solid var(--punch);padding-left:16px;margin-bottom:30px}
+.shop h3{font-family:"Hahmlet",serif;font-weight:500;font-size:22px}
+.shop .kind{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--ink-soft);margin:2px 0 9px}
+.shop p{font-size:14px;color:#33495C}
+.shop .again{display:inline-block;margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;border:1px solid var(--line);padding:3px 10px;color:var(--ink-soft)}
+.shop-imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.shop-imgs img{width:100%;height:170px;object-fit:cover;border:1.5px solid var(--ink);display:block;background:var(--sea)}
+
+@media (max-width:920px){
+  body{height:auto;overflow:visible;display:block}
+  .stage{grid-template-columns:1fr;display:grid}
+  .mapbox{border-right:none;border-bottom:1.5px solid var(--ink);height:58vh}
+  .p-name{font-size:42px}
+  header{padding:12px 18px}
+  .picker{width:100%}
+  select{flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">찐로컬 맛집,여가 <b>찐이다!</b><small>G팀 OPENCLASS · 찐로컬 노선도 · 9 STATIONS</small></div>
+  <div class="picker">
+    <label for="sel">목적지</label>
+    <select id="sel"></select>
+  </div>
+</header>
+
+<div class="stage">
+
+  <div class="mapbox">
+    <svg class="map" id="svg" viewBox="118 22 306 580" preserveAspectRatio="xMidYMid meet" role="img" aria-label="찐로컬 맛집·여가 노선도">
+      <g id="viewport">
+        <!-- 북측 실루엣 -->
+        <path class="nk" d="M176.4 115 L153.7 105 L97.1 100 L44.5 65 L56.6 35 L68.8 15 L40 -40 L60 -90 L30 -140 L55 -230 L340 -230 L352 -150 L392 -90 L402 -30 L372 20 L330 40 L311.5 40 L246.7 70 L210.3 70 Z"/>
+        <text class="nk-lab" x="150" y="60">NORTH</text>
+        <!-- 남측 -->
+        <path class="sk" d="M176.4 115 L210.3 70 L246.7 70 L311.5 40 L319.6 65 L360 120 L388.3 170 L398 210 L396.4 260 L411 292 L398 302 L400.5 350 L380.2 390 L356 398 L339.8 410 L315.5 415 L287.2 405 L262.9 425 L226.5 430 L194.2 445 L182 470 L161.8 445 L149.7 420 L149.7 395 L157.8 365 L165.8 335 L169.9 300 L153.7 270 L145.6 235 L165.8 210 L182 195 L174 165 L165.8 140 Z"/>
+        <!-- 군사분계선 -->
+        <path class="dmz" d="M176.4 115 L210.3 70 L246.7 70 L311.5 40"/>
+        <!-- 거제 -->
+        <ellipse class="jeju" cx="319" cy="431" rx="16" ry="9"/>
+        <!-- 제주 -->
+        <ellipse class="jeju" cx="166" cy="562" rx="29" ry="13"/>
+        <text class="jeju-lab" x="166" y="590" text-anchor="middle">JEJU · 철도 미연결</text>
+
+        <path id="route" class="route-bg"></path>
+        <path id="routeDone" class="route-done"></path>
+        <g id="stations"></g>
+        <g id="train"></g>
+      </g>
+    </svg>
+
+    <div class="hint">역 클릭 = 상세 기록 · 휠 = 확대·축소 · 확대 후 드래그 = 이동</div>
+    <div class="zoom">
+      <button id="zin" aria-label="확대">+</button>
+      <div class="zlev mono" id="zlev">100%</div>
+      <button id="zout" aria-label="축소">−</button>
+      <button id="zreset">전체</button>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <div class="p-status">
+      <span id="stat">정차 중</span>
+      <b id="prog" class="mono">1 / 9</b>
+    </div>
+    <div class="p-body" id="pbody"></div>
+  </aside>
+
+</div>
+
+<!-- 상세 -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+  <div class="sheet-bg" data-close></div>
+  <div class="sheet-in">
+    <div class="sheet-head">
+      <div><h2 id="shTitle"></h2><p id="shSub"></p></div>
+      <button class="closebtn" data-close aria-label="닫기">×</button>
+    </div>
+    <div class="sheet-body" id="shBody"></div>
+  </div>
+</div>
+
+<script>
+/* ================== 데이터 ================== */
+const S = [
+  {n:"성북", st:"성북역", line:"찐로컬선 기점", km:0, pres:"황준성", x:206, y:110,
+   memo:"고대 앞 골목의 불맛 잡채밥으로 시작해서, 성북천 벚꽃길 산책으로 끝나는 코스다.",
+   tags:["잡채밥","숯불 돼지갈비","청국장","성북천 벚꽃"],
+   shops:[
+     {n:"안동반점", k:"잡채밥 10,000 · 고기튀김(소) 15,000", addr:"서울 성북구 고려대로1길 35-1",
+      d:"고추기름에 버무린 불맛 가득 잡채밥 레전드. 술이 땡기는 고기튀김.",
+      img:["seongbuk-andong-1.jpg","seongbuk-andong-2.jpg"]},
+     {n:"성한숯불갈비", k:"돼지갈비 1인분 15,000", addr:"서울 성북구 보문로13길 4",
+      d:"그냥 돼지갈비 No. 양념게장(밑반찬) + 솥밥(유료) + 후식냉면(서비스, 물냉·비냉 선택 가능). 숯불에 굽는 돼지갈비라 미쳤음.",
+      img:["seongbuk-seonghan.jpg"]},
+     {n:"시골청국장", k:"삼겹살 1인분 16,000 · 청국장 9,000", addr:"서울 중구 다산로44길 5",
+      d:"삼겹살 집인데 청국장이 더 맛있음. 연탄불에 굽는 고기라 삼겹살도 맛도리.",
+      img:[]}],
+   spots:[
+     {n:"성북천", k:"산책 · 벚꽃 명소", addr:"서울 성북구 보문동4가 51-1",
+      d:"숨은 벚꽃 명소. 천 따라 분위기 좋은 음식점이 많다. 환승연애 희두·나연 커플 촬영 장소도 있음.",
+      img:["seongbuk-cheon.jpg"]}]},
+
+  {n:"신촌", st:"신촌역", line:"찐로컬선 · 연희·연남·이대 포함", km:9, pres:"김준학", x:183, y:131,
+   memo:"연희동, 연남동, 이대까지 전부 신촌 생활권이다. 걸어서 다 먹을 수 있다.",
+   tags:["연어초밥","대방어","숙성 삼겹살","조각피자"],
+   shops:[
+     {n:"연어초밥 (이대)", k:"생연어+연어 불초밥 10p 13,500", addr:"서울 서대문구 이화여대1길 42-1 3층",
+      d:"괜찮은 가격에 싱싱한 연어초밥을 먹을 수 있는 연어초밥 전문점. (일·월 휴무)",
+      img:["sinchon-salmon.jpg"]},
+     {n:"회뜨는총각 (연남동)", k:"대방어+매운탕 65,000 · 우럭+광어+숭어 40,000", addr:"서울 마포구 동교로 260 1층",
+      d:"연남동치고 적당한 가격에 맛있는 방어를 먹을 수 있는 맛집.",
+      img:["sinchon-hoe.jpg"]},
+     {n:"더도이축산직영점 신촌점", k:"숙성生삼겹살 100g 3,990 (첫 주문 500g)", addr:"서울 서대문구 연세로7길 24 1층",
+      d:"인기가 많아져서 웨이팅이 생기긴 했지만 여전히 신촌 가격 대비 삼겹살집 1등.",
+      img:["sinchon-dodoi.jpg"]},
+     {n:"열대야 맥주", k:"페퍼로니 피자 1조각 4,000", addr:"서울 서대문구 연세로4길 26 지하1층",
+      d:"주문하면 따뜻하게 다시 구워 주셔서 바삭하고 따뜻한 피자를 먹을 수 있다. 가끔 사장님께서 영화도 틀어주시고, 구비된 책들도 읽을 수 있다. 분위기가 좋다.",
+      img:["sinchon-yeoldaeya-1.jpg","sinchon-yeoldaeya-2.jpg"]}],
+   spots:[
+     {n:"창천근린공원", k:"산책 스팟", addr:"서울 서대문구 창천동 4-55",
+      d:"경의선 숲길을 가봤다면 다른 산책 코스로 한번쯤 가볼 만한 곳. 오르막길 중간 카페 '바람'에서 경치를 보며 쉬어 갈 수 있고, 풍차가 있는 정상 전망이 좋다.",
+      img:["sinchon-changcheon.jpg"]},
+     {n:"라이카 시네마", k:"예술영화전용관", addr:"서울 서대문구 연희로8길 18 스페이스독",
+      d:"연희동 최초의 영화관이자 예술영화전용관. 연희동을 방문한다면 영화를 볼만한 곳.",
+      img:["sinchon-laika.jpg"]}]},
+
+  {n:"안산", st:"안산역", line:"디저트지선", km:42, pres:"이은수", x:177, y:170,
+   memo:"안산 고잔동에는 디저트 카페거리가 있다. 케이크로 시작해 마카롱으로 끝낸다.",
+   tags:["레몬 케이크","복숭아 케이크","마카롱"],
+   shops:[
+     {n:"피크닉 케이크", k:"레몬 케이크 7,300 · 복숭아 케이크(여름 한정) 8,000", addr:"안산 고잔동 디저트 카페거리",
+      d:"제철 과일 케이크 판매. 과하게 달지 않아 더 맛있는 케이크에, 잘 익어 말랑하고 달콤한 복숭아가 시트·크림과 조화롭게 어우러진다. 카페 내부도 깔끔해서 쉬었다 가기 좋고, 홀케이크도 예뻐서 특별한 날 주문해봐도 좋다.",
+      img:["ansan-picnic-1.jpg","ansan-picnic-2.jpg"]},
+     {n:"블루밍데이", k:"마카롱(맛은 매일 바뀜) · 구움과자", addr:"안산 고잔동 디저트 카페거리",
+      d:"쫀득하게 부서지는 꼬끄, 맛마다 신경 써서 깊은 맛을 낸 필링, 부담 없는 가격과 다양한 맛. 추천은 오레오 맛. 매장도 잘 꾸며져 있고 넓은 편이라 음료와 함께 쉬었다 가기 좋다.",
+      img:["ansan-blooming-1.jpg","ansan-blooming-2.jpg"]}],
+   spots:[]},
+
+  {n:"역삼", st:"역삼역", line:"찐로컬선", km:58, pres:"손영주", x:219, y:151,
+   memo:"도심 속 가정집 닭볶음탕에 퇴근 후 한잔, 마무리는 선정릉 산책이다.",
+   tags:["닭볶음탕","뼈구이","선정릉 산책"],
+   shops:[
+     {n:"고갯마루", k:"닭볶음탕", addr:"서울 강남구 테헤란로28길 27",
+      d:"도심 속 가정집 스타일 식당. 매콤한 국물, 퇴근 후 한잔.",
+      img:["yeoksam-gogaetmaru-1.jpg","yeoksam-gogaetmaru-2.jpg"]},
+     {n:"뼈다구집정해장 역삼직영점", k:"뼈구이", addr:"서울 강남구 언주로85길 13 1층 107호",
+      d:"매콤 달달한 뼈구이. 파스타도 있고, 분모자도 추가 가능!",
+      img:["yeoksam-bbyeodagu.jpg"]}],
+   spots:[
+     {n:"선정릉", k:"도심 산책 · 06시~21시", addr:"서울 강남구 선릉로100길 1",
+      d:"도심 빌딩 속 여유. 만 24세 이하 입장료 무료!! 운영시간이 06시~21시라 퇴근 후에도 감상 가능.",
+      img:["yeoksam-seonjeongneung.jpg"]}]},
+
+  {n:"판교", st:"판교역", line:"테라스지선", km:71, pres:"김다은", x:233, y:173,
+   memo:"밤에는 테라스에서 와인, 낮에는 생크림 케이크. 판교는 디저트가 찐이다.",
+   tags:["와인 테라스","당근케이크","생크림 케이크"],
+   shops:[
+     {n:"rufxxx", k:"와인 · 흑맥주", addr:"경기 성남시 분당구 백현동 585-3",
+      d:"야외 테라스가 있어 밤에 간단한 와인과 케이크 먹으러 오기에 분위기가 너무 좋다. 극단에서 운영하는 가게라 이전에는 공연도 했다.",
+      img:["pangyo-rufxxx-1.jpg","pangyo-rufxxx-2.jpg"]},
+     {n:"세시셀라", k:"당근케이크 9,900", addr:"경기 성남시 분당구 분당내곡로 151 아브뉴프랑 1층",
+      d:"크림치즈가 아닌 생크림 베이스 당근케이크!",
+      img:["pangyo-cecicela.jpg"]},
+     {n:"make a cake", k:"망고·초코·초코바나나 생크림 케이크 (1호 평균 70,000)", addr:"경기 성남시 분당구 동판교로177번길 25 아비뉴프랑판교점",
+      d:"별다른 장식 없이 심플한 디자인이지만 생크림 맛이 훌륭함. 당도와 점도가 완벽해 달아 보이는 이름에도 적당히 담백하고 부드러운 맛.",
+      img:["pangyo-makeacake.jpg"]}],
+   spots:[
+     {n:"판교 현대백화점", k:"쇼핑 · 미술관 · 영화관", addr:"경기 성남시 분당구 판교역로146번길 20",
+      d:"백화점이 커서 쇼핑 외에 미술관이나 영화관, 친구들과의 모임에 모두 적합하다.",
+      img:["pangyo-hyundai.jpg"]}]},
+
+  {n:"포항", st:"포항역", line:"동해미각선", km:391, pres:"이정현·이규형", x:371, y:291,
+   memo:"물회는 육수 없이 고추장에 먼저 비벼 먹는 게 정통 포항식이다.",
+   tags:["고추장 물회","스페이스워크"],
+   shops:[
+     {n:"새포항물회집", k:"포항식 고추장 물회", addr:"경북 포항시 북구 삼호로 65",
+      d:"육수 없이 특제 고추장 양념에 신선한 자연산 횟감을 먼저 비벼 먹는 정통 포항식을 고수하는 40년 전통 로컬 맛집. '백종원의 3대 천왕'에 소개되어 깊은 감칠맛을 전국적으로 인정받았고, 쫄깃한 식감과 함께 포항 오리지널 고추장 물회의 진수를 경험할 수 있다.",
+      img:["pohang-mulhoe.jpg"]}],
+   spots:[
+     {n:"환호공원 스페이스워크", k:"무료 입장 랜드마크", addr:"경북 포항시 북구 환호공원길 30",
+      d:"2021년 11월 개장, 누적 방문객 400만 명을 돌파한 포항 대표 랜드마크. 국내 최대 규모의 체험형 철제 조형물로, 333m 트랙을 직접 걸어 올라가며 영일대 바다와 포항 도심을 파노라마 뷰로 감상할 수 있다.",
+      img:["pohang-spacewalk.jpg"]}]},
+
+  {n:"대구", st:"대구역", line:"맛도리선", km:432, pres:"이정현·이규형", x:331.7, y:313,
+   memo:"군만두는 필수⭐️, 야끼우동은 오픈런. 대구는 노포가 찐이다.",
+   tags:["군만두","무침회","판초밥","야끼우동","소금빵"],
+   shops:[
+     {n:"영생덕", k:"군만두 8,000", addr:"대구 중구 종로 39",
+      d:"50년 전통, 화교 출신 사장님이 운영하시는 중식 노포. 군만두를 필수⭐️⭐️⭐️⭐️로 시키고 나머지 식사류는 취향껏 시키길 추천.",
+      img:["daegu-yeongsaengdeok-1.jpg","daegu-yeongsaengdeok-2.jpg"]},
+     {n:"호남원조식당", k:"호남무침회 21,000 · 납작만두 4,000", addr:"대구 서구 달구벌대로375길 26-1",
+      d:"1968년 호남원조식당에서 최초로 선보인 무침회. 전현무계획에 나옴!! 납작만두에 싸먹으면 레전드 맛도리 무침회.",
+      img:["daegu-honam.jpg"]},
+     {n:"후꾸스시 시부야", k:"시부야스페셜스시 30,000", addr:"대구 중구 달구벌대로443길 9 1층",
+      d:"대구 레전드 맛도리 판초밥. 한 점 한 점 사라질 때마다 아쉬워서 눈물이 날 지경. 오마카세는 부담스럽고 저렴한 초밥집은 싫을 때 적당히 가기 좋은 판초밥집.",
+      img:["daegu-fuku.jpg"]},
+     {n:"중화반점", k:"야끼우동 13,000", addr:"대구 중구 중앙대로 406-12",
+      d:"대구 오면 야끼우동 먹어줘야 함. 원조 야끼우동집이니 오픈런 추천!! 1인 1야끼우동에 탕수육 추가하길. +) 경상도 가면 중화비빔밥도 꼭, 갱상도 중화비빔밥이 찐임.",
+      img:["daegu-junghwa.jpg"]},
+     {n:"소베", k:"소금빵 2,600 · 명란소금빵", addr:"대구 중구 중앙대로79길 6 1층",
+      d:"소금빵으로 유명한 대구 베이커리. 명란소금빵도 인기.",
+      img:[]}],
+   spots:[
+     {n:"두류공원 야외음악당", k:"피크닉 · 불꽃놀이", addr:"대구 달서구 공원순환로 36",
+      d:"대구 피크닉 명소. 이월드 옆이라 불꽃놀이 감상 가능(불꽃놀이가 목적이면 228자유광장이 더 잘 보임). 봄에는 벚꽃이 피고 여름에는 치맥페스티벌이 열려 즐길 거리가 많다.",
+      img:["daegu-duryu.jpg"]}]},
+
+  {n:"진주", st:"진주역", line:"남도지선", km:512, pres:"안준우·송재명", x:297, y:397,
+   memo:"타코, 불맛 짬뽕, 수제버거. 진주는 의외로 다국적 맛도리 도시다.",
+   tags:["퀘사디아","불맛 짬뽕","수제버거"],
+   shops:[
+     {n:"홈리스타코", k:"퀘사디아", addr:"경남 진주시 진주대로516번길 6-3 2층",
+      d:"멕시코 현지인이 추천한 퀘사디아 맛집. 김치퀘사디아, Korean grill 화이타 등 한국인 특화 메뉴도 선택 가능.",
+      img:["jinju-homelesstaco.jpg"]},
+     {n:"짬뽕공장", k:"짬뽕 · 크림 짬뽕", addr:"경남 진주시 진주대로516번길 15",
+      d:"사장님 맘대로 장사하는 분위기에서 나오는 맛집의 향기. 불맛이 살아있는 짬뽕.",
+      img:["jinju-jjamppong.jpg"]},
+     {n:"디어버거", k:"찐더블치즈버거", addr:"경남 진주시 가좌길 18-1",
+      d:"지나가면서 나는 패티 냄새에 못 이겨 결국 들어가게 되는 마법 같은 수제버거 맛집. 갓 만든 게 맛있으니 매장에서 먹는 걸 추천. 수제버거치고 나쁘지 않은 가격이라 학생에게 인기가 많다.",
+      img:["jinju-dearburger.jpg"]}],
+   spots:[
+     {n:"월아산 숲속의 진주", k:"캠핑 · 야간 경관", addr:"경남 진주시 진성면 달음산로 313",
+      d:"숲속에 꾸며진 캠핑장이자 공원. 낮에는 꽃구경, 밤에는 각종 조명으로 다양한 경관을 동시에 감상할 수 있다. (대중교통 접근성이 떨어져 차량 운행 필수)",
+      img:["jinju-wolasan.jpg"]}]},
+
+  {n:"거제", st:"거제역", line:"섬끝선 종점", km:548, pres:"안준우·송재명", x:319, y:429,
+   memo:"산낙지는 참숯에 구워 먹는다. 후식으로 쫀드기랑 팥빙수도 주신다.",
+   tags:["산낙지 숯불구이","브런치","내장국밥"],
+   shops:[
+     {n:"희희낙락", k:"산낙지 숯불구이", addr:"경남 거제시 중곡로3길 22-1",
+      d:"국내산 산낙지를 참숯불에 구워 먹는 요리. 쫀드기랑 팥빙수도 주심.",
+      img:["geoje-heeheenakrak.jpg"]},
+     {n:"수나로이", k:"에그 샌드위치 11,000 · 감자뇨끼 16,500", addr:"경남 거제시 동상명진길 119-1",
+      d:"브런치하기 좋은 곳. 샌드위치가 지림.",
+      img:[]},
+     {n:"충남식당", k:"내장국밥 9,000", addr:"경남 거제시 거제중앙로 1883-2",
+      d:"토렴식 국밥. 원이 추천 맛집.",
+      img:[]}],
+   spots:[
+     {n:"외도 보타니아", k:"해상농원", addr:"경남 거제시 외도길 17",
+      d:"거제 바다 위에 꾸며진 해상농원. 배를 타고 들어가는 섬 전체가 정원이다.",
+      img:[]},
+     {n:"바람의 언덕", k:"언덕 뷰 스팟", addr:"경남 거제시 남부면 갈곶리 산 14-47",
+      d:"바다를 내려다보는 거제 대표 언덕 뷰 스팟.",
+      img:[]},
+     {n:"P-ark", k:"초대형 복합문화 카페", addr:"부산 영도구 해양로195번길 180",
+      d:"부산 초대형 카페로 각종 전시회나 팝업이 동시에 열리는 복합문화공간, 오션뷰. (접근성이 떨어져 차량 추천, 살벌한 커피 가격, 오션뷰가 약간은 항구·조선소 뷰일 수 있음)",
+      img:["geoje-park.jpg"]}]}
+];
+
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+if(RM) document.body.classList.add('nomotion');
+
+/* ================== 노선 경로 ================== */
+function smooth(pts){
+  let d = `M ${pts[0].x} ${pts[0].y}`;
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
+    const c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+    const c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+    d+=` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+const route = document.getElementById('route');
+const routeDone = document.getElementById('routeDone');
+const dAttr = smooth(S);
+route.setAttribute('d', dAttr);
+routeDone.setAttribute('d', dAttr);
+const TOTAL = route.getTotalLength();
+routeDone.style.strokeDasharray = TOTAL;
+routeDone.style.strokeDashoffset = TOTAL;
+
+// 각 역이 경로 상 어느 길이에 있는지 계산
+const LEN = S.map(s=>{
+  let best=0, bd=1e9;
+  for(let l=0;l<=TOTAL;l+=1){
+    const p=route.getPointAtLength(l);
+    const dd=(p.x-s.x)**2+(p.y-s.y)**2;
+    if(dd<bd){bd=dd;best=l;}
+  }
+  return best;
+});
+
+/* ================== 역 마커 ================== */
+const NS='http://www.w3.org/2000/svg';
+const gStations = document.getElementById('stations');
+const markers = S.map((s,i)=>{
+  const g=document.createElementNS(NS,'g');
+  g.setAttribute('class','stn');
+  g.setAttribute('tabindex','0');
+  g.setAttribute('role','button');
+  g.setAttribute('aria-label',`${s.n} ${s.st}`);
+  // 라벨 방향: 지도 오른쪽 역은 왼쪽에 라벨
+  const left = s.x > 300;
+  const ax = left ? -13 : 13;
+  const anchor = left ? 'end' : 'start';
+  g.innerHTML = `
+    <circle class="ring" cx="0" cy="0" r="9"></circle>
+    <circle class="stn-dot" cx="0" cy="0" r="5.5"></circle>
+    <text class="stn-lab" x="${ax}" y="1" text-anchor="${anchor}">${s.n}</text>
+    <text class="stn-sub" x="${ax}" y="12" text-anchor="${anchor}">${s.st.toUpperCase()} · ${s.km}KM</text>
+    <circle class="stn-hit" cx="0" cy="0" r="17"></circle>`;
+  g.addEventListener('click',()=>goTo(i,true));
+  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goTo(i,true);}});
+  gStations.append(g);
+  return g;
+});
+
+/* ================== 기차 ================== */
+const gTrain = document.getElementById('train');
+gTrain.innerHTML = `
+  <g id="tr">
+    <ellipse cx="0" cy="9" rx="15" ry="4" fill="#16283F" opacity=".16"/>
+    <rect x="-14" y="-7" width="26" height="14" rx="3" fill="#B0313B" stroke="#16283F" stroke-width="1.4"/>
+    <path d="M12 -7 h4 a5 5 0 0 1 5 5 v4 a5 5 0 0 1 -5 5 h-4 z" fill="#16283F"/>
+    <rect x="-9" y="-4" width="6" height="6" rx="1" fill="#EDF2EC"/>
+    <rect x="0" y="-4" width="6" height="6" rx="1" fill="#EDF2EC"/>
+    <circle cx="-8" cy="8" r="2.6" fill="#16283F"/>
+    <circle cx="6" cy="8" r="2.6" fill="#16283F"/>
+  </g>`;
+const tr = document.getElementById('tr');
+
+/* ================== 뷰포트 / 줌 ================== */
+const VB={x:118,y:22,w:306,h:580};
+const CX=VB.x+VB.w/2, CY=VB.y+VB.h/2;
+const MIN_Z=0.45, MAX_Z=5;
+const viewport=document.getElementById('viewport');
+let scale=1, fx=CX, fy=CY;
+
+function applyView(){
+  viewport.style.transform=`translate(${CX}px,${CY}px) scale(${scale}) translate(${-fx}px,${-fy}px)`;
+  // 확대·축소해도 역 이름과 기차 크기는 일정하게. 단 많이 축소하면 라벨이 겹치므로 살짝만 키움
+  const inv = scale>=1 ? 1/scale : Math.pow(1/scale, .55);
+  markers.forEach((m,i)=>m.setAttribute('transform',`translate(${S[i].x},${S[i].y}) scale(${inv})`));
+  document.getElementById('zlev').textContent = Math.round(scale*100)+'%';
+  drawTrain(curLen, curAng);
+}
+function setZoom(z, focus){
+  scale=Math.min(MAX_Z,Math.max(MIN_Z,z));
+  if(scale<=1){fx=CX;fy=CY;}          // 축소 상태에선 항상 전국이 가운데
+  else if(focus){fx=focus.x;fy=focus.y;}
+  applyView();
+}
+document.getElementById('zin').onclick =()=>setZoom(scale*1.55, route.getPointAtLength(curLen));
+document.getElementById('zout').onclick=()=>setZoom(scale/1.55, route.getPointAtLength(curLen));
+document.getElementById('zreset').onclick=()=>setZoom(1);
+
+const svgEl=document.getElementById('svg');
+svgEl.addEventListener('wheel',e=>{
+  e.preventDefault();
+  setZoom(scale * (e.deltaY<0?1.16:1/1.16), route.getPointAtLength(curLen));
+},{passive:false});
+
+/* 확대 상태에서 끌어서 이동 */
+let drag=null;
+svgEl.addEventListener('pointerdown',e=>{
+  if(scale<=1 || e.target.closest('.stn')) return;
+  drag={sx:e.clientX, sy:e.clientY, fx, fy, k:VB.w/svgEl.getBoundingClientRect().width};
+  viewport.style.transition='none';
+  svgEl.classList.add('dragging'); svgEl.setPointerCapture(e.pointerId);
+});
+svgEl.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  fx = drag.fx - (e.clientX-drag.sx)*drag.k/scale;
+  fy = drag.fy - (e.clientY-drag.sy)*drag.k/scale;
+  applyView();
+});
+['pointerup','pointercancel'].forEach(t=>svgEl.addEventListener(t,()=>{
+  if(!drag) return;
+  drag=null; viewport.style.transition=''; svgEl.classList.remove('dragging');
+}));
+
+/* ================== 이동 ================== */
+let cur=0, curLen=LEN[0], curAng=0, anim=null;
+
+function drawTrain(len, ang){
+  const p=route.getPointAtLength(len);
+  const inv=1/scale;
+  tr.setAttribute('transform',`translate(${p.x},${p.y}) scale(${inv}) rotate(${ang})`);
+  routeDone.style.strokeDashoffset = TOTAL - len;
+}
+function angleAt(len){
+  const a=route.getPointAtLength(Math.max(0,len-2));
+  const b=route.getPointAtLength(Math.min(TOTAL,len+2));
+  return Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
+}
+
+const stat=document.getElementById('stat');
+const prog=document.getElementById('prog');
+
+function goTo(i, openDetail){
+  if(i===cur && !anim){ if(openDetail) openSheet(i); return; }
+  cancelAnimationFrame(anim);
+  const from=curLen, to=LEN[i], dist=Math.abs(to-from);
+  const dur = RM ? 0 : Math.min(3400, 700 + dist*3.2);
+  const t0=performance.now();
+  const dir = to>from ? '남행' : '북행';
+  stat.innerHTML = `<b>운행 중</b> · ${S[cur].n} → ${S[i].n} · ${dir}`;
+  markers.forEach(m=>m.classList.remove('here'));
+
+  function frame(t){
+    const k = dur===0 ? 1 : Math.min(1,(t-t0)/dur);
+    const e = k<.5 ? 2*k*k : 1-((-2*k+2)**2)/2;   // ease-in-out
+    curLen = from + (to-from)*e;
+    curAng = angleAt(curLen) + (to<from?180:0);
+    drawTrain(curLen, curAng);
+    if(scale>1){ const p=route.getPointAtLength(curLen); fx=p.x; fy=p.y; applyView(); }
+    if(k<1){ anim=requestAnimationFrame(frame); }
+    else{
+      anim=null; cur=i;
+      arrive(i);
+      if(openDetail) setTimeout(()=>openSheet(i), 180);
+    }
+  }
+  anim=requestAnimationFrame(frame);
+}
+
+function arrive(i){
+  const s=S[i];
+  stat.innerHTML = `<b>정차 중</b> · ${s.st}`;
+  prog.textContent = `${i+1} / 9`;
+  document.getElementById('sel').value = i;
+  markers.forEach((m,j)=>{
+    m.classList.toggle('here', j===i);
+    m.classList.toggle('visited', j<=i);
+  });
+  renderPanel(i);
+}
+
+/* ================== 패널 ================== */
+const pbody=document.getElementById('pbody');
+function renderPanel(i){
+  const s=S[i];
+  pbody.innerHTML = `
+    <div class="fade">
+      <p class="p-seq">STOP ${String(i+1).padStart(2,'0')} · ${s.st.toUpperCase()}</p>
+      <h2 class="p-name">${s.n}<b>역</b></h2>
+      <p class="p-line">${s.line}</p>
+      <div class="p-facts">
+        <div><span>서울 기점</span><strong>${s.km} km</strong></div>
+        <div><span>발표</span><strong class="sm">${s.pres}</strong></div>
+        <div><span>기록한 곳</span><strong>${s.shops.length+s.spots.length}곳</strong></div>
+      </div>
+      <p class="p-memo">${s.memo}</p>
+      <div class="p-tags">${s.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+      <button class="p-cta" id="cta">${s.n} 찐 맛집·여가 보기</button>
+    </div>`;
+  document.getElementById('cta').onclick=()=>openSheet(i);
+}
+
+/* ================== 상세 ================== */
+const sheet=document.getElementById('sheet');
+function shopHTML(sh){
+  return `
+    <article class="shop">
+      <h3>${sh.n}</h3>
+      <p class="kind">${sh.k}</p>
+      <p>${sh.d}</p>
+      <span class="again">📍 ${sh.addr}</span>
+      ${sh.img.length ? `<div class="shop-imgs">${sh.img.map(f=>`<img src="images/${f}" alt="${sh.n}" loading="lazy">`).join('')}</div>` : ''}
+    </article>`;
+}
+function openSheet(i){
+  const s=S[i];
+  document.getElementById('shTitle').textContent = `${s.n}, 여가 찐이다!`;
+  document.getElementById('shSub').textContent = `${s.st} · ${s.line} · 발표 ${s.pres}`;
+  document.getElementById('shBody').innerHTML =
+    `<p class="sec-lab">찐 맛집 — ${s.shops.length}곳</p>` +
+    s.shops.map(shopHTML).join('') +
+    (s.spots.length ? `<p class="sec-lab">찐 여가 — ${s.spots.length}곳</p>` + s.spots.map(shopHTML).join('') : '');
+  sheet.classList.add('open');
+  sheet.querySelector('.closebtn').focus();
+}
+sheet.addEventListener('click',e=>{ if(e.target.hasAttribute('data-close')) sheet.classList.remove('open'); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') sheet.classList.remove('open'); });
+
+/* ================== 드롭다운 ================== */
+const sel=document.getElementById('sel');
+sel.innerHTML = S.map((s,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${s.n} — ${s.st}</option>`).join('');
+sel.onchange = e => goTo(+e.target.value, false);
+
+/* ================== 시작 ================== */
+applyView();
+curAng = angleAt(LEN[0]);
+drawTrain(LEN[0], curAng);
+arrive(0);
+</script>
+</body>
+</html>
