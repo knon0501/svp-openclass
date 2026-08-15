@@ -148,6 +148,37 @@ svg.map.dragging{cursor:grabbing}
 .shop-imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:8px;margin-top:12px}
 .shop-imgs img{width:100%;aspect-ratio:4/3;max-height:250px;object-fit:cover;border:1.5px solid var(--ink);display:block;background:var(--sea)}
 
+/* ---------- 도착 퀴즈 ---------- */
+.quiz{position:fixed;inset:0;z-index:95;display:none}
+.quiz.open{display:block}
+.quiz-in{position:absolute;inset:0;background:var(--land);overflow-y:auto;animation:rise .34s cubic-bezier(.3,.9,.3,1)}
+.quiz-head{padding:20px clamp(20px,4vw,56px);border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:center;gap:16px;position:sticky;top:0;background:var(--land);z-index:2}
+.quiz-head h2{font-family:"Hahmlet",serif;font-weight:700;font-size:clamp(26px,3vw,40px);line-height:1.05}
+.quiz-head h2 b{color:var(--punch)}
+.quiz-tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--punch);margin-bottom:4px}
+.quiz-skip{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;background:none;border:1.5px solid var(--ink);padding:10px 16px;cursor:pointer;color:var(--ink);flex-shrink:0}
+.quiz-skip:hover{background:var(--ink);color:var(--land)}
+.quiz-body{max-width:940px;margin:0 auto;padding:34px clamp(20px,4vw,56px) 80px}
+.q-title{font-family:"Hahmlet",serif;font-weight:500;font-size:clamp(20px,2.4vw,30px);line-height:1.35}
+.q-img{display:block;max-width:100%;max-height:46vh;margin:22px auto 0;border:1.5px solid var(--ink);background:#fff}
+.q-img.sm{max-height:36vh;margin:16px 0 0}
+.q-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:10px;margin-top:24px}
+.q-opts.ox{grid-template-columns:repeat(2,1fr)}
+.q-opt{font:inherit;font-size:15px;text-align:left;cursor:pointer;background:var(--land);border:1.5px solid var(--ink);color:var(--ink);padding:14px 16px;display:flex;align-items:center;gap:10px;transition:background .15s,color .15s}
+.q-opt .qn{font-family:"IBM Plex Mono",monospace;font-size:10px;border:1px solid var(--line);padding:1px 7px;color:inherit}
+.q-opt .qn:empty{display:none}
+.q-opt:hover{background:var(--ink);color:var(--land)}
+.q-opt.q-big{justify-content:center;font-size:24px;font-weight:600;padding:24px}
+.q-opt:disabled{pointer-events:none}
+.q-opt.wrong{opacity:.4;text-decoration:line-through;animation:shake .3s}
+.q-opt.right{background:var(--punch);border-color:var(--punch);color:var(--land)}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.q-fb{display:none;margin-top:28px;border-left:2px solid var(--punch);padding-left:16px}
+.q-fb.show{display:block;animation:fade .45s ease}
+.q-fb b{font-family:"Hahmlet",serif;font-size:20px;color:var(--punch)}
+.q-fb p{font-size:15px;color:#33495C;margin-top:6px;max-width:70ch}
+.q-next{width:auto;margin-top:22px;padding:14px 26px}
+
 @media (max-width:920px){
   body{height:auto;overflow:visible;display:block}
   .stage{grid-template-columns:1fr;display:grid}
@@ -226,6 +257,17 @@ svg.map.dragging{cursor:grabbing}
       </div>
     </div>
     <div class="sheet-body" id="shBody"></div>
+  </div>
+</div>
+
+<!-- 도착 퀴즈 -->
+<div class="quiz" id="quiz" role="dialog" aria-modal="true" aria-labelledby="qHead">
+  <div class="quiz-in">
+    <div class="quiz-head">
+      <div><p class="quiz-tag" id="qTag"></p><h2 id="qHead"></h2></div>
+      <button class="quiz-skip" id="qSkip">건너뛰고 소개 보기 →</button>
+    </div>
+    <div class="quiz-body" id="qBody"></div>
   </div>
 </div>
 
@@ -560,7 +602,8 @@ function goTo(i, openDetail){
     else{
       anim=null; cur=i;
       arrive(i);
-      if(openDetail) setTimeout(()=>openSheet(i), 180);
+      // 도착하면 소개보다 퀴즈가 먼저 뜬다. 퀴즈를 마치거나 건너뛰면 소개로 이동
+      setTimeout(()=>openQuiz(i), 260);
     }
   }
   anim=requestAnimationFrame(frame);
@@ -623,7 +666,112 @@ function openSheet(i){
   sheet.querySelector('.closebtn').focus();
 }
 sheet.addEventListener('click',e=>{ if(e.target.hasAttribute('data-close')) sheet.classList.remove('open'); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') sheet.classList.remove('open'); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ sheet.classList.remove('open'); quiz.classList.remove('open'); } });
+
+/* ================== 도착 퀴즈 ================== */
+/* t:'mc' 객관식 · t:'ox' OX · t:'live' 현장 공개형
+   q 질문 · img 문제 이미지 · opts 보기 · ans 정답 인덱스 · why 해설 · ansImg 정답 사진 */
+const QUIZ = {
+  성북:[
+    {t:'mc', q:"음식 맞추기 (난이도 中) — 확대 사진 속 이 음식은 무엇일까요?", img:"quiz-seongbuk-zoom.jpg",
+     opts:["야끼우동","잡채밥","쟁반짜장","마파두부덮밥"], ans:1,
+     why:"잡채밥! (잡채덮밥도 인정) 성북 안동반점의 불맛 가득 잡채밥이다.", ansImg:"seongbuk-andong-1.jpg"},
+    {t:'mc', q:"서울의 자치구 총 개수는 몇 개일까요?",
+     opts:["20개","23개","25개","27개"], ans:2,
+     why:"서울은 25개 자치구로 이루어져 있다."}],
+  신촌:[
+    {t:'mc', q:"음식 맞추기 (난이도 下) — 확대 사진 속 이 음식은 무엇일까요?", img:"quiz-sinchon-zoom.jpg",
+     opts:["참치회","광어초밥","연어초밥","새우초밥"], ans:2,
+     why:"연어초밥! 이대 연어초밥 전문점의 생연어+연어 불초밥이다.", ansImg:"sinchon-salmon.jpg"},
+    {t:'mc', q:"서울의 한강공원은 총 몇 개일까요?",
+     opts:["9개","10개","11개","12개"], ans:2,
+     why:"한강공원은 총 11개다."}],
+  안산:[
+    {t:'mc', q:"경기도의 시(市) 개수는?", img:"quiz-gyeonggi-city.jpg",
+     opts:["24개","26개","28개","30개","32개"], ans:2,
+     why:"경기도는 28개의 시와 3개의 군으로 구성되어 있다."}],
+  역삼:[
+    {t:'mc', q:"음식 맞추기 (난이도 上) — 확대 사진 속 이 음식은 무엇일까요?", img:"quiz-yeoksam-zoom.jpg",
+     opts:["닭볶음탕","매운 등갈비찜","불족발","뼈구이"], ans:3,
+     why:"뼈구이! 역삼 뼈다구집정해장의 매콤 달달한 뼈구이다.", ansImg:"yeoksam-bbyeodagu.jpg"}],
+  판교:[
+    {t:'mc', q:"경기도의 마스코트는 무엇일까요?", img:"quiz-gyeonggi-mascot.jpg",
+     opts:["고양고양이","봉공이","정약용","부천핸썹","조아용"], ans:1,
+     why:"경기도 마스코트는 봉공이! (고양고양이=고양시, 정약용=남양주시, 부천핸썹=부천시, 조아용=용인시 마스코트)"}],
+  포항:[
+    {t:'mc', q:"[식문화 퀴즈] 포항 전통 물회를 처음 먹을 때, 넣지 않는 것은 무엇일까요?", img:"quiz-pohang-mulhoe.jpg",
+     opts:["생선","초고추장","육수(물)","얼음"], ans:2,
+     why:"원래 포항 해녀·선원들이 즐기던 전통 방식은 싱싱한 회, 배, 채소에 고추장만 넣고 쓱쓱 비벼서 비빔회처럼 먼저 먹다가, 나중에 얼음이나 물을 넣어 물회로 즐긴다! 새포항물회집이 바로 이 정통 방식의 물회집."}],
+  대구:[
+    {t:'live', q:"[대구 사투리 퀴즈] 세 가지 '사회' 표현의 뜻을 순서대로 맞춰보세요!", img:"quiz-daegu-satoori.jpg",
+     why:"정답은 이정현 프로가 직접 사투리로 시현하며 현장에서 공개합니다! 🎤"}],
+  진주:[
+    {t:'mc', q:"귀여운 '하모'가 상징하는 지역의 이름은?", img:"quiz-jinju-hamo.jpg",
+     opts:["합천","밀양","사천","진주"], ans:3,
+     why:"하모는 진주 남강에 사는 수달을 모티브로 한 진주시 마스코트다."}],
+  거제:[
+    {t:'ox', q:"서울의 면적은 부산보다 넓다 (O/X)", img:"quiz-geoje-ox.jpg",
+     opts:["O 그렇다","X 아니다"], ans:1,
+     why:"서울(약 605.25㎢)보다 부산(약 770.17㎢)이 더 넓다."},
+    {t:'mc', q:"다음 중 부산 출신이 아닌 연예인은?", img:"quiz-geoje-celeb.jpg",
+     opts:["원우(세븐틴)","지민(BTS)","정국(BTS)","안보현"], ans:0,
+     why:"세븐틴 원우는 경남 창원 출신! 지민·정국·안보현은 모두 부산 출신이다."}]
+};
+const quiz=document.getElementById('quiz');
+const qBody=document.getElementById('qBody');
+let qSt=0, qIdx=0;
+
+function openQuiz(i){
+  const list=QUIZ[S[i].n];
+  if(!list||!list.length){ openSheet(i); return; }
+  qSt=i; qIdx=0;
+  quiz.classList.add('open');
+  renderQ();
+  quiz.querySelector('.quiz-in').scrollTop=0;
+}
+function closeQuiz(toSheet){
+  quiz.classList.remove('open');
+  if(toSheet) setTimeout(()=>openSheet(qSt),120);
+}
+function renderQ(){
+  const s=S[qSt], list=QUIZ[s.n], Q=list[qIdx], last=qIdx===list.length-1;
+  document.getElementById('qHead').innerHTML=`${s.n} <b>도착 퀴즈</b>`;
+  document.getElementById('qTag').textContent=`STOP ${String(qSt+1).padStart(2,'0')} · Q ${qIdx+1}/${list.length} · 출제 ${s.pres}`;
+  let opts;
+  if(Q.t==='live'){
+    opts=`<button class="q-opt q-big" onclick="qReveal(this)">🎤 정답 공개</button>`;
+  }else{
+    opts=Q.opts.map((o,j)=>`<button class="q-opt${Q.t==='ox'?' q-big':''}" onclick="qPick(this,${j})"><span class="qn">${Q.t==='ox'?'':j+1}</span>${o}</button>`).join('');
+  }
+  qBody.innerHTML=`
+    <div class="fade">
+      <h3 class="q-title">${Q.q}</h3>
+      ${Q.img?`<img class="q-img" src="images/${Q.img}" alt="퀴즈 이미지">`:''}
+      <div class="q-opts${Q.t==='ox'?' ox':''}">${opts}</div>
+      <div class="q-fb" id="qFb">
+        <b>${Q.t==='live'?'정답 공개!':'정답! 🎉'}</b>
+        <p>${Q.why}</p>
+        ${Q.ansImg?`<img class="q-img sm" src="images/${Q.ansImg}" alt="정답 사진">`:''}
+        <button class="p-cta q-next" onclick="${last?'closeQuiz(true)':'qNext()'}">${last?`${s.n} 소개 보러가기 →`:'다음 문제 →'}</button>
+      </div>
+    </div>`;
+}
+function qPick(btn,j){
+  const Q=QUIZ[S[qSt].n][qIdx];
+  if(j===Q.ans){
+    btn.classList.add('right');
+    qBody.querySelectorAll('.q-opt').forEach(b=>b.disabled=true);
+    document.getElementById('qFb').classList.add('show');
+  }else{
+    btn.classList.add('wrong'); btn.disabled=true;
+  }
+}
+function qReveal(btn){
+  btn.disabled=true; btn.classList.add('right');
+  document.getElementById('qFb').classList.add('show');
+}
+function qNext(){ qIdx++; renderQ(); quiz.querySelector('.quiz-in').scrollTop=0; }
+document.getElementById('qSkip').onclick=()=>closeQuiz(true);
 
 /* ================== 드롭다운 ================== */
 const sel=document.getElementById('sel');
