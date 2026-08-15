@@ -221,6 +221,24 @@ svg.map.dragging{cursor:grabbing}
 .aicard{margin-top:22px;border:1.5px solid var(--ink);background:#fff;padding:10px}
 .aicard img{width:100%;max-height:52vh;object-fit:contain;display:block}
 .q-fb .aicard{margin-top:16px}
+/* 카드 위 투명 클릭영역 — 이미지 원본 비율을 유지해야 좌표가 어긋나지 않는다 */
+.hotlayer{position:relative;margin:0 auto;line-height:0}
+.hotlayer img{width:100%;height:auto;max-height:none;object-fit:fill}
+.hot{position:absolute;padding:0;cursor:pointer;background:transparent;border:3px solid transparent;border-radius:12px;
+  transition:background .15s,border-color .15s}
+.hot:hover:not(:disabled){border-color:var(--punch);background:rgba(176,49,59,.16)}
+.hot:focus-visible{outline:3px solid var(--punch);outline-offset:3px}
+.hot:disabled{cursor:default}
+.hotmark{position:absolute;top:-15px;right:-15px;width:32px;height:32px;border-radius:50%;
+  display:none;place-content:center;font-size:17px;font-weight:700;color:#fff;border:2.5px solid #fff;line-height:1}
+.hot.right{border-color:var(--punch);background:rgba(176,49,59,.22)}
+.hot.right .hotmark{display:grid;background:var(--punch)}
+.hot.right .hotmark::before{content:"✓"}
+.hot.wrong{border-color:var(--ink);background:rgba(22,40,63,.6)}
+.hot.wrong .hotmark{display:grid;background:var(--ink)}
+.hot.wrong .hotmark::before{content:"✕"}
+.hot-hint{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--ink-soft);
+  text-align:center;margin-top:12px;line-height:1.6}
 
 @media (max-width:920px){
   body{height:auto;overflow:visible;display:block}
@@ -735,6 +753,7 @@ const QUIZ = {
      accept:["잡채"], answer:"잡채밥 (잡채덮밥도 인정)",
      why:"성북 안동반점의 고추기름에 버무린 불맛 가득 잡채밥이다."},
     {t:'mc', q:"서울의 자치구 총 개수는 몇 개일까요?", card:"quiz-seoul-q1.jpg",
+     hot:[{x:11,y:50,w:36.5,h:18},{x:49.5,y:50,w:36.5,h:18},{x:11,y:70.5,w:36.5,h:18.5},{x:49.5,y:70.5,w:36.5,h:18.5}],
      opts:["20개","23개","25개","27개"], ans:2,
      why:"서울은 총 25개 자치구로 이루어져 있다."}],
   신촌:[
@@ -743,10 +762,12 @@ const QUIZ = {
      accept:["연어"], answer:"연어초밥",
      why:"이대 연어초밥 전문점의 생연어+연어 불초밥이다."},
     {t:'mc', q:"서울의 한강공원은 총 몇 개일까요?", card:"quiz-seoul-q2.jpg",
+     hot:[{x:15,y:55,w:35,h:16},{x:53.5,y:55,w:35.5,h:16},{x:15,y:73,w:35,h:16},{x:53.5,y:73,w:35.5,h:16}],
      opts:["9개","10개","11개","12개"], ans:2,
      why:"광나루·잠실·뚝섬·잠원·반포·이촌·여의도·양화·망원·난지·강서, 총 11개다."}],
   안산:[
     {t:'mc', q:"경기도의 시(市) 개수는?", card:"quiz-gyeonggi-city.jpg",
+     hot:[{x:14,y:38,w:24,h:22},{x:38.5,y:38,w:22,h:22},{x:62,y:38,w:24,h:22},{x:24,y:63,w:24,h:24},{x:50,y:63,w:24,h:24}],
      opts:["24개","26개","28개","30개","32개"], ans:2,
      why:"경기도는 28개의 시와 3개의 군으로 구성되어 있다."}],
   역삼:[
@@ -766,6 +787,7 @@ const QUIZ = {
      why:"경기도 마스코트는 봉공이! 나머지는 고양고양이=고양시, 정약용=남양주시, 부천핸썹=부천시, 조아용=용인시 마스코트다."}],
   포항:[
     {t:'mc', q:"[식문화 퀴즈] 포항 전통 물회를 처음 먹을 때, 넣지 않는 것은 무엇일까요?", card:"quiz-pohang-mulhoe.jpg",
+     hot:[{x:31,y:31,w:23.5,h:13},{x:55,y:31,w:28.5,h:13},{x:31,y:46.5,w:23.5,h:12.5},{x:55,y:46.5,w:28.5,h:12.5}],
      opts:["🐟 생선","🌶️ 초고추장","💧 육수(물)","🧊 얼음"], ans:2,
      why:"원래 포항 해녀·선원들이 즐기던 전통 방식은 싱싱한 회, 배, 채소에 고추장만 넣고 쓱쓱 비벼서 비빔회처럼 먼저 먹다가, 나중에 얼음이나 물을 넣어 물회로 즐긴다! 새포항물회집이 바로 이 정통 방식의 물회집."}],
   대구:[
@@ -780,6 +802,7 @@ const QUIZ = {
      why:"정답은 영상에서 바로바로 공개! 유튜브에 '경상도 사투리 퀴즈'만 검색해도 하루 종일 퀴즈 가능. 나이쨔~"}],
   거제:[
     {t:'ox', q:"서울의 면적은 부산보다 넓다 (O/X)", card:"quiz-geoje-ox.jpg",
+     hot:[{x:4.5,y:28,w:45,h:58},{x:50.5,y:28,w:45,h:58}],
      opts:["O 그렇다","X 아니다"], ans:1,
      why:"서울은 약 605.25㎢, 부산은 약 770.17㎢로 부산이 더 넓다."},
     {t:'mc', q:"다음 중 부산 출신이 아닌 연예인은?", cards:true,
@@ -835,15 +858,21 @@ function renderQ(){
   }else{
     const cls=Q.t==='ox'?' q-big':(Q.cards?' q-card':'');
     mid=`${Q.img?`<img class="q-img" src="images/${Q.img}" alt="퀴즈 이미지">`:''}
-      <div class="q-opts${Q.t==='ox'?' ox':''}${Q.cards?' cards':''}">${Q.opts.map((o,j)=>{
+      ${Q.hot?'':`<div class="q-opts${Q.t==='ox'?' ox':''}${Q.cards?' cards':''}">${Q.opts.map((o,j)=>{
         const label=Q.cards?o.o:o;
         const im=Q.cards?`<img src="images/${o.img}" alt="${label}">`:'';
         return `<button class="q-opt${cls}" onclick="qPick(this,${j})">${im}<span class="q-lab"><span class="qn">${Q.t==='ox'?'':j+1}</span>${label}</span></button>`;
-      }).join('')}</div>`;
+      }).join('')}</div>`}`;
   }
   const fbHead=Q.t==='video'?'진행 안내':(Q.t==='live'?'정답 공개!':(Q.t==='input'?'':'정답! 🎉'));
   // G팀이 만든 원본 퀴즈 카드는 출제/정답 카드 자리에 그대로 얹는다
-  const card=Q.card?`<figure class="aicard"><img src="images/${Q.card}" alt="퀴즈 이미지"></figure>`:'';
+  const cardInner=Q.hot
+    ? `<div class="hotlayer" id="hotLayer"><img src="images/${Q.card}" alt="퀴즈 이미지">
+        ${Q.hot.map((h,j)=>`<button class="hot" style="left:${h.x}%;top:${h.y}%;width:${h.w}%;height:${h.h}%"
+          aria-label="${Q.opts[j]}" onclick="qPick(this,${j})"><span class="hotmark"></span></button>`).join('')}
+       </div><p class="hot-hint">카드 속 보기를 직접 클릭하세요</p>`
+    : `<img src="images/${Q.card}" alt="퀴즈 이미지">`;
+  const card=Q.card?`<figure class="aicard">${cardInner}</figure>`:'';
   const ansCard=Q.ansCard?`<figure class="aicard"><img src="images/${Q.ansCard}" alt="정답 이미지"></figure>`:'';
   qBody.innerHTML=`
     <div class="fade">
@@ -857,6 +886,7 @@ function renderQ(){
         ${nextBtn}
       </div>
     </div>`;
+  if(Q.hot) fitHotLayer();
   if(Q.t==='input'){
     const inp=document.getElementById('qInput');
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter') qCheck(); });
@@ -866,15 +896,26 @@ function qPick(btn,j){
   const Q=QUIZ[S[qSt].n][qIdx];
   if(j===Q.ans){
     btn.classList.add('right');
-    qBody.querySelectorAll('.q-opt').forEach(b=>b.disabled=true);
-    document.getElementById('qFb').classList.add('show');
+    qBody.querySelectorAll('.q-opt,.hot').forEach(b=>b.disabled=true);
+    showFb();
   }else{
     btn.classList.add('wrong'); btn.disabled=true;
   }
 }
 function qReveal(btn){
   btn.disabled=true; btn.classList.add('right');
-  document.getElementById('qFb').classList.add('show');
+  showFb();
+}
+function showFb(){
+  const fb=document.getElementById('qFb');
+  fb.classList.add('show');
+  setTimeout(()=>fb.scrollIntoView({behavior:RM?'auto':'smooth',block:'nearest'}),60);
+}
+function fitHotLayer(){
+  const wrap=document.getElementById('hotLayer'); if(!wrap) return;
+  const img=wrap.querySelector('img');
+  const fit=()=>{ if(img.naturalHeight) wrap.style.maxWidth=`min(100%, ${(img.naturalWidth/img.naturalHeight*62).toFixed(1)}vh)`; };
+  if(img.complete) fit(); else img.addEventListener('load',fit,{once:true});
 }
 function qNorm(v){ return v.replace(/\s+/g,'').toLowerCase(); }
 function qCheck(){
@@ -897,7 +938,7 @@ function qWin(){
   document.getElementById('qTools').style.display='none';
   document.getElementById('qMiss').classList.remove('show');
   document.getElementById('qFbHead').textContent=`정답: ${Q.answer} 🎉`;
-  document.getElementById('qFb').classList.add('show');
+  showFb();
 }
 function qStage(){
   const Q=QUIZ[S[qSt].n][qIdx];
