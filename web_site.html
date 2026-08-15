@@ -148,6 +148,26 @@ svg.map.dragging{cursor:grabbing}
 .shop-imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:8px;margin-top:12px}
 .shop-imgs img{width:100%;aspect-ratio:4/3;max-height:250px;object-fit:cover;border:1.5px solid var(--ink);display:block;background:var(--sea)}
 
+/* ---------- 출발 화면 ---------- */
+.intro{position:fixed;inset:0;z-index:100;background:var(--paper);
+  background-image:repeating-linear-gradient(90deg,rgba(22,40,63,.03) 0 1px,transparent 1px 4px);
+  display:grid;place-content:center;text-align:center;padding:32px;transition:opacity .38s ease}
+.intro.hide{opacity:0;pointer-events:none}
+.intro-tag{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.24em;color:var(--ink-soft)}
+.intro-title{font-family:"Hahmlet",serif;font-weight:700;font-size:clamp(34px,6vw,72px);line-height:1.1;letter-spacing:-.02em;margin:14px 0 10px}
+.intro-title b{color:var(--punch)}
+.intro-sub{font-size:clamp(14px,1.6vw,17px);color:var(--ink-soft)}
+.intro-flow{display:inline-block;margin-top:26px;border:1px dashed var(--line);padding:12px 20px;font-size:13px;color:#33495C}
+.intro-flow b{color:var(--punch);font-weight:600}
+.intro-go{display:block;margin:30px auto 0;font:inherit;font-size:16px;font-weight:600;letter-spacing:.08em;cursor:pointer;
+  background:var(--ink);color:var(--land);border:none;padding:18px 40px;transition:background .2s}
+.intro-go:hover{background:var(--punch)}
+.intro-rail{width:min(420px,80vw);height:1.5px;background:var(--line);margin:34px auto 0;position:relative}
+.intro-rail span{position:absolute;top:-4px;width:9px;height:9px;background:var(--punch);border-radius:50%}
+.intro-rail span:nth-child(1){left:0}
+.intro-rail span:nth-child(2){left:50%;transform:translateX(-50%);background:var(--line)}
+.intro-rail span:nth-child(3){right:0;background:var(--line)}
+
 /* ---------- 도착 퀴즈 ---------- */
 .quiz{position:fixed;inset:0;z-index:95;display:none}
 .quiz.open{display:block}
@@ -256,7 +276,7 @@ svg.map.dragging{cursor:grabbing}
       </g>
     </svg>
 
-    <div class="hint">역 클릭 = 상세 기록 · 휠 = 확대·축소 · 확대 후 드래그 = 이동</div>
+    <div class="hint">역 클릭 = 도착 퀴즈부터 · 휠 = 확대·축소 · 확대 후 드래그 = 이동</div>
     <div class="zoom">
       <button id="zin" aria-label="확대">+</button>
       <div class="zlev mono" id="zlev">100%</div>
@@ -287,6 +307,18 @@ svg.map.dragging{cursor:grabbing}
       </div>
     </div>
     <div class="sheet-body" id="shBody"></div>
+  </div>
+</div>
+
+<!-- 출발 화면 -->
+<div class="intro" id="intro">
+  <div>
+    <p class="intro-tag">G팀 OPENCLASS · 찐로컬 노선도 · 9 STATIONS</p>
+    <h1 class="intro-title">찐로컬 맛집,여가 <b>찐이다!</b></h1>
+    <p class="intro-sub">성북에서 거제까지, 로컬만 아는 맛집과 여가 스팟을 찾아 떠나는 9개 역</p>
+    <p class="intro-flow">각 역에 <b>도착</b>하면 → <b>도착 퀴즈</b>를 풀고 → <b>지역 소개</b>로 이어집니다</p>
+    <button class="intro-go" id="introGo">🚂 성북역으로 출발하기</button>
+    <div class="intro-rail"><span></span><span></span><span></span></div>
   </div>
 </div>
 
@@ -523,8 +555,8 @@ const markers = S.map((s,i)=>{
     <text class="stn-lab" x="${ax}" y="1" text-anchor="${anchor}">${s.n}</text>
     <text class="stn-sub" x="${ax}" y="12" text-anchor="${anchor}">${s.st.toUpperCase()} · ${s.km}KM</text>
     <circle class="stn-hit" cx="0" cy="0" r="17"></circle>`;
-  g.addEventListener('click',()=>goTo(i,true));
-  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goTo(i,true);}});
+  g.addEventListener('click',()=>goTo(i));
+  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goTo(i);}});
   gStations.append(g);
   return g;
 });
@@ -611,8 +643,9 @@ function angleAt(len){
 const stat=document.getElementById('stat');
 const prog=document.getElementById('prog');
 
-function goTo(i, openDetail){
-  if(i===cur && !anim){ if(openDetail) openSheet(i); return; }
+function goTo(i){
+  // 이미 정차 중인 역을 다시 클릭해도 퀴즈부터. 소개만 볼 땐 패널의 버튼을 쓰면 된다
+  if(i===cur && !anim){ openQuiz(i); return; }
   cancelAnimationFrame(anim);
   const from=curLen, to=LEN[i], dist=Math.abs(to-from);
   const dur = RM ? 0 : Math.min(3400, 700 + dist*3.2);
@@ -894,13 +927,41 @@ document.getElementById('qSkip').onclick=()=>closeQuiz(true);
 /* ================== 드롭다운 ================== */
 const sel=document.getElementById('sel');
 sel.innerHTML = S.map((s,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${s.n} — ${s.st}</option>`).join('');
-sel.onchange = e => goTo(+e.target.value, false);
+sel.onchange = e => goTo(+e.target.value);
 
 /* ================== 시작 ================== */
 applyView();
 curAng = angleAt(LEN[0]);
 drawTrain(LEN[0], curAng);
 arrive(0);
+
+/* 출발 화면 → 첫 역도 다른 역과 똑같이 '도착 → 퀴즈 → 소개' 순서를 타게 한다 */
+function departTo(i){
+  const p=route.getPointAtLength(LEN[i]);
+  const offX=-52, offY=-46;                      // 북서쪽에서 선로로 진입
+  const ang=Math.atan2(-offY,-offX)*180/Math.PI;
+  const dur=RM?0:1200, t0=performance.now();
+  stat.innerHTML=`<b>운행 중</b> · 출발 → ${S[i].n}`;
+  function frame(t){
+    const k=dur===0?1:Math.min(1,(t-t0)/dur);
+    const e=1-Math.pow(1-k,3);                   // ease-out
+    tr.setAttribute('transform',
+      `translate(${p.x+offX*(1-e)},${p.y+offY*(1-e)}) scale(${1/scale}) rotate(${ang})`);
+    if(k<1) requestAnimationFrame(frame);
+    else{
+      curAng=angleAt(LEN[i]);
+      drawTrain(curLen, curAng);
+      arrive(i);
+      setTimeout(()=>openQuiz(i), 300);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+const intro=document.getElementById('intro');
+document.getElementById('introGo').onclick=()=>{
+  intro.classList.add('hide');
+  setTimeout(()=>{ intro.style.display='none'; departTo(0); }, 380);
+};
 </script>
 </body>
 </html>
