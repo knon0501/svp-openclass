@@ -217,17 +217,13 @@ svg.map.dragging{cursor:grabbing}
 /* 영상 퀴즈 */
 .q-vids{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:14px;margin-top:22px}
 .q-vids iframe{width:100%;aspect-ratio:16/9;border:1.5px solid var(--ink);background:#000}
-/* 대구 사투리 패널 */
-.sat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:14px;margin-top:22px}
-.sat-panel{border:1.5px solid var(--ink);background:#fff;padding:18px;text-align:center}
-.sat-no{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--ink-soft)}
-.sat-no small{display:block;font-size:8px;letter-spacing:.1em;margin-top:2px;color:var(--line)}
-.sat-word{font-family:"Hahmlet",serif;font-weight:700;font-size:clamp(38px,4.5vw,56px);line-height:1.1;margin-top:10px}
-.sat-word span{color:var(--punch)}
-.sat-q{font-size:12px;color:var(--ink-soft);margin-top:8px}
-.sat-opts{margin-top:16px;font-size:13px;letter-spacing:.04em;border:1px dashed var(--line);padding:12px 16px}
-.sat-opts b{color:var(--punch);font-weight:600}
-.sat-opts em{display:block;color:var(--ink-soft);font-style:normal;font-size:11px;margin-top:2px}
+/* G팀 출제 카드 (원본 퀴즈 이미지) */
+.aicard{margin-top:22px;border:1.5px solid var(--ink);background:#fff;padding:10px}
+.aicard figcaption{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.2em;color:var(--ink-soft);
+  border-bottom:1px solid var(--line);padding-bottom:7px;margin-bottom:10px}
+.aicard figcaption b{color:var(--punch);font-weight:600}
+.aicard img{width:100%;max-height:52vh;object-fit:contain;display:block}
+.q-fb .aicard{margin-top:16px}
 
 @media (max-width:920px){
   body{height:auto;overflow:visible;display:block}
@@ -741,7 +737,7 @@ const QUIZ = {
      stages:["quiz-seongbuk-z1.jpg","quiz-seongbuk-z2.jpg","seongbuk-andong-1.jpg"],
      accept:["잡채"], answer:"잡채밥 (잡채덮밥도 인정)",
      why:"성북 안동반점의 고추기름에 버무린 불맛 가득 잡채밥이다."},
-    {t:'mc', q:"서울의 자치구 총 개수는 몇 개일까요?",
+    {t:'mc', q:"서울의 자치구 총 개수는 몇 개일까요?", card:"quiz-seoul-q1.jpg",
      opts:["20개","23개","25개","27개"], ans:2,
      why:"서울은 총 25개 자치구로 이루어져 있다."}],
   신촌:[
@@ -749,11 +745,11 @@ const QUIZ = {
      stages:["quiz-sinchon-z1.jpg","quiz-sinchon-z2.jpg","sinchon-salmon.jpg"],
      accept:["연어"], answer:"연어초밥",
      why:"이대 연어초밥 전문점의 생연어+연어 불초밥이다."},
-    {t:'mc', q:"서울의 한강공원은 총 몇 개일까요?",
+    {t:'mc', q:"서울의 한강공원은 총 몇 개일까요?", card:"quiz-seoul-q2.jpg",
      opts:["9개","10개","11개","12개"], ans:2,
      why:"광나루·잠실·뚝섬·잠원·반포·이촌·여의도·양화·망원·난지·강서, 총 11개다."}],
   안산:[
-    {t:'mc', q:"경기도의 시(市) 개수는?",
+    {t:'mc', q:"경기도의 시(市) 개수는?", card:"quiz-gyeonggi-city.jpg",
      opts:["24개","26개","28개","30개","32개"], ans:2,
      why:"경기도는 28개의 시와 3개의 군으로 구성되어 있다."}],
   역삼:[
@@ -769,13 +765,14 @@ const QUIZ = {
        {o:"정약용", img:"mascot-namyangju.png"},
        {o:"부천핸썹", img:"mascot-bucheon.png"},
        {o:"조아용", img:"mascot-yongin.png"}], ans:1,
+     ansCard:"quiz-gyeonggi-answer.jpg",
      why:"경기도 마스코트는 봉공이! 나머지는 고양고양이=고양시, 정약용=남양주시, 부천핸썹=부천시, 조아용=용인시 마스코트다."}],
   포항:[
-    {t:'mc', q:"[식문화 퀴즈] 포항 전통 물회를 처음 먹을 때, 넣지 않는 것은 무엇일까요?",
+    {t:'mc', q:"[식문화 퀴즈] 포항 전통 물회를 처음 먹을 때, 넣지 않는 것은 무엇일까요?", card:"quiz-pohang-mulhoe.jpg",
      opts:["🐟 생선","🌶️ 초고추장","💧 육수(물)","🧊 얼음"], ans:2,
      why:"원래 포항 해녀·선원들이 즐기던 전통 방식은 싱싱한 회, 배, 채소에 고추장만 넣고 쓱쓱 비벼서 비빔회처럼 먼저 먹다가, 나중에 얼음이나 물을 넣어 물회로 즐긴다! 새포항물회집이 바로 이 정통 방식의 물회집."}],
   대구:[
-    {t:'live', q:"[대구 사투리 퀴즈] 세 가지 '사회' 표현의 뜻을 순서대로 맞춰보세요!", sat:true,
+    {t:'live', q:"[대구 사투리 퀴즈] 세 가지 '사회' 표현의 뜻을 순서대로 맞춰보세요!", card:"quiz-daegu-satoori.jpg",
      why:"정답은 이정현 프로가 직접 사투리로 시현하며 현장에서 공개합니다! 🎤"}],
   진주:[
     {t:'mc', q:"귀여운 '하모'가 상징하는 지역의 이름은?", img:"mascot-jinju-hamo.png",
@@ -785,7 +782,7 @@ const QUIZ = {
      vids:["https://www.youtube.com/embed/xyAPMzk1Dbk?start=40","https://www.youtube.com/embed/-9HfxgZW360"],
      why:"정답은 영상에서 바로바로 공개! 유튜브에 '경상도 사투리 퀴즈'만 검색해도 하루 종일 퀴즈 가능. 나이쨔~"}],
   거제:[
-    {t:'ox', q:"서울의 면적은 부산보다 넓다 (O/X)",
+    {t:'ox', q:"서울의 면적은 부산보다 넓다 (O/X)", card:"quiz-geoje-ox.jpg",
      opts:["O 그렇다","X 아니다"], ans:1,
      why:"서울은 약 605.25㎢, 부산은 약 770.17㎢로 부산이 더 넓다."},
     {t:'mc', q:"다음 중 부산 출신이 아닌 연예인은?", cards:true,
@@ -814,18 +811,6 @@ function closeQuiz(toSheet){
   qBody.innerHTML='';               // 유튜브 영상 재생 정지
   if(toSheet) setTimeout(()=>openSheet(qSt),120);
 }
-function satHTML(){
-  const P=[["① 하향 억양","Downward Intonation","사회","↘"],
-           ["② 상향 억양","Upward Intonation","사회","↗"],
-           ["③ 복합 억양","Complex Intonation","사~회","⤴"]];
-  return `<div class="sat-grid">${P.map(p=>`
-    <div class="sat-panel">
-      <p class="sat-no">${p[0]}<small>${p[1]}</small></p>
-      <p class="sat-word">${p[2]}<span>${p[3]}</span></p>
-      <p class="sat-q">의미는 무엇일까요?</p>
-    </div>`).join('')}</div>
-  <div class="sat-opts">보기 — <b>Ⓐ</b> 4회 · <b>Ⓑ</b> MC 사회자 · <b>Ⓒ</b> 사회생활 <em>각 억양이 어떤 뜻인지 순서대로 골라보세요</em></div>`;
-}
 function renderQ(){
   const s=S[qSt], list=QUIZ[s.n], Q=list[qIdx], last=qIdx===list.length-1;
   qStageIdx=0;
@@ -847,8 +832,7 @@ function renderQ(){
       </div>
       <p class="q-miss" id="qMiss">❌ 땡! 다시 도전해보세요</p>`;
   }else if(Q.t==='live'){
-    mid=`${Q.sat?satHTML():''}
-      <div class="q-opts"><button class="q-opt q-big" onclick="qReveal(this)">🎤 정답 공개</button></div>`;
+    mid=`<div class="q-opts"><button class="q-opt q-big" onclick="qReveal(this)">🎤 정답 공개</button></div>`;
   }else if(Q.t==='video'){
     mid=`<div class="q-vids">${Q.vids.map(v=>`<iframe src="${v}" title="사투리 퀴즈 영상" allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`).join('')}</div>`;
   }else{
@@ -861,13 +845,20 @@ function renderQ(){
       }).join('')}</div>`;
   }
   const fbHead=Q.t==='video'?'진행 안내':(Q.t==='live'?'정답 공개!':(Q.t==='input'?'':'정답! 🎉'));
+  // G팀이 만든 원본 퀴즈 카드는 출제/정답 카드 자리에 그대로 얹는다
+  const card=Q.card?`<figure class="aicard"><figcaption><b>G팀 출제 카드</b> · 발표 원본</figcaption>
+      <img src="images/${Q.card}" alt="출제 카드"></figure>`:'';
+  const ansCard=Q.ansCard?`<figure class="aicard"><figcaption><b>G팀 정답 카드</b></figcaption>
+      <img src="images/${Q.ansCard}" alt="정답 카드"></figure>`:'';
   qBody.innerHTML=`
     <div class="fade">
       <h3 class="q-title">${Q.q}</h3>
+      ${card}
       ${mid}
       <div class="q-fb${Q.t==='video'?' show':''}" id="qFb">
         <b id="qFbHead">${fbHead}</b>
         <p>${Q.why}</p>
+        ${ansCard}
         ${nextBtn}
       </div>
     </div>`;
