@@ -217,11 +217,8 @@ svg.map.dragging{cursor:grabbing}
 /* 영상 퀴즈 */
 .q-vids{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:14px;margin-top:22px}
 .q-vids iframe{width:100%;aspect-ratio:16/9;border:1.5px solid var(--ink);background:#000}
-/* G팀 출제 카드 (원본 퀴즈 이미지) */
+/* 원본 퀴즈 카드 이미지 */
 .aicard{margin-top:22px;border:1.5px solid var(--ink);background:#fff;padding:10px}
-.aicard figcaption{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.2em;color:var(--ink-soft);
-  border-bottom:1px solid var(--line);padding-bottom:7px;margin-bottom:10px}
-.aicard figcaption b{color:var(--punch);font-weight:600}
 .aicard img{width:100%;max-height:52vh;object-fit:contain;display:block}
 .q-fb .aicard{margin-top:16px}
 
@@ -846,10 +843,8 @@ function renderQ(){
   }
   const fbHead=Q.t==='video'?'진행 안내':(Q.t==='live'?'정답 공개!':(Q.t==='input'?'':'정답! 🎉'));
   // G팀이 만든 원본 퀴즈 카드는 출제/정답 카드 자리에 그대로 얹는다
-  const card=Q.card?`<figure class="aicard"><figcaption><b>G팀 출제 카드</b> · 발표 원본</figcaption>
-      <img src="images/${Q.card}" alt="출제 카드"></figure>`:'';
-  const ansCard=Q.ansCard?`<figure class="aicard"><figcaption><b>G팀 정답 카드</b></figcaption>
-      <img src="images/${Q.ansCard}" alt="정답 카드"></figure>`:'';
+  const card=Q.card?`<figure class="aicard"><img src="images/${Q.card}" alt="퀴즈 이미지"></figure>`:'';
+  const ansCard=Q.ansCard?`<figure class="aicard"><img src="images/${Q.ansCard}" alt="정답 이미지"></figure>`:'';
   qBody.innerHTML=`
     <div class="fade">
       <h3 class="q-title">${Q.q}</h3>
