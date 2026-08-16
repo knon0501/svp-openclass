@@ -131,7 +131,11 @@ svg.map.dragging{cursor:grabbing}
 .sheet-head p{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-soft);margin-top:6px}
 .closebtn{font:inherit;font-size:24px;line-height:1;background:none;border:1.5px solid var(--ink);width:44px;height:44px;cursor:pointer;color:var(--ink);flex-shrink:0}
 .closebtn:hover{background:var(--ink);color:var(--land)}
+.headtools{display:flex;gap:12px;align-items:flex-start;flex-shrink:0}
 .closewrap{flex-shrink:0}
+.sheet-next{width:auto;padding:12px 20px;font-size:12px;flex-shrink:0}
+.quiz-retry{opacity:.55;padding:10px 12px}
+.quiz-retry:hover{opacity:1}
 .esc{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.16em;color:var(--ink-soft);text-align:center;margin-top:5px}
 .sheet-body{
   padding:32px clamp(20px,4vw,56px) 72px;
@@ -334,9 +338,12 @@ svg.map.dragging{cursor:grabbing}
   <div class="sheet-in">
     <div class="sheet-head">
       <div><h2 id="shTitle"></h2><p id="shSub"></p></div>
-      <div class="closewrap">
-        <button class="closebtn" data-close aria-label="닫기">×</button>
-        <p class="esc">ESC</p>
+      <div class="headtools">
+        <button class="p-cta sheet-next" id="shNext"></button>
+        <div class="closewrap">
+          <button class="closebtn" data-close aria-label="닫기">×</button>
+          <p class="esc">ESC</p>
+        </div>
       </div>
     </div>
     <div class="sheet-body" id="shBody"></div>
@@ -369,7 +376,10 @@ svg.map.dragging{cursor:grabbing}
   <div class="quiz-in">
     <div class="quiz-head">
       <div><p class="quiz-tag" id="qTag"></p><h2 id="qHead"></h2></div>
-      <button class="quiz-skip" id="qSkip">건너뛰고 소개 보기 →</button>
+      <div class="headtools">
+        <button class="quiz-skip quiz-retry" id="qRetry" title="이 문제를 처음 상태로">↺ 다시</button>
+        <button class="quiz-skip" id="qSkip">건너뛰고 소개 보기 →</button>
+      </div>
     </div>
     <div class="quiz-body" id="qBody"></div>
   </div>
@@ -420,18 +430,6 @@ const S = [
       d:"연희동 최초의 영화관이자 예술영화전용관. 연희동을 방문한다면 영화를 볼만한 곳.",
       img:["sinchon-laika.jpg"]}]},
 
-  {n:"안산", st:"안산역", line:"디저트지선", km:42, pres:"이은수", x:177, y:170,
-   memo:"안산 고잔동에는 디저트 카페거리가 있다. 케이크로 시작해 마카롱으로 끝낸다.",
-   tags:["레몬 케이크","복숭아 케이크","마카롱"],
-   shops:[
-     {n:"피크닉 케이크", k:"레몬 케이크 7,300 · 복숭아 케이크(여름 한정) 8,000", addr:"안산 고잔동 디저트 카페거리",
-      d:"제철 과일 케이크 판매. 과하게 달지 않아 더 맛있는 케이크에, 잘 익어 말랑하고 달콤한 복숭아가 시트·크림과 조화롭게 어우러진다. 카페 내부도 깔끔해서 쉬었다 가기 좋고, 홀케이크도 예뻐서 특별한 날 주문해봐도 좋다.",
-      img:["ansan-picnic-1.jpg","ansan-picnic-2.jpg"]},
-     {n:"블루밍데이", k:"마카롱(맛은 매일 바뀜) · 구움과자", addr:"안산 고잔동 디저트 카페거리",
-      d:"쫀득하게 부서지는 꼬끄, 맛마다 신경 써서 깊은 맛을 낸 필링, 부담 없는 가격과 다양한 맛. 추천은 오레오 맛. 매장도 잘 꾸며져 있고 넓은 편이라 음료와 함께 쉬었다 가기 좋다.",
-      img:["ansan-blooming-1.jpg","ansan-blooming-2.jpg"]}],
-   spots:[]},
-
   {n:"역삼", st:"역삼역", line:"찐로컬선", km:58, pres:"손영주", x:219, y:151,
    memo:"도심 속 가정집 닭볶음탕에 퇴근 후 한잔, 마무리는 선정릉 산책이다.",
    tags:["닭볶음탕","뼈구이","선정릉 산책"],
@@ -464,6 +462,21 @@ const S = [
      {n:"판교 현대백화점", k:"쇼핑 · 미술관 · 영화관", addr:"경기 성남시 분당구 판교역로146번길 20",
       d:"백화점이 커서 쇼핑 외에 미술관이나 영화관, 친구들과의 모임에 모두 적합하다.",
       img:["pangyo-hyundai.jpg"]}]},
+
+  {n:"수원", st:"수원역", line:"경기남부지선", km:95, pres:"김다은·이은수", x:216, y:196,
+   memo:"아는 맛집이 없어 새로 오픈한 곳만 골랐다. 수원 잘 아는 분들도 아직 안 가봤을 곳들.",
+   tags:["이베리코","퓨전양식","참치"],
+   shops:[
+     {n:"운화로", k:"삼겹살 16,000 · 목살 16,000", addr:"수원 · 수원시청역 근처",
+      d:"수원시청역 근처에 새로 문을 연 이베리코 전문점. 삼겹살과 목살을 팻말로 구분해 내주고 밑반찬이 푸짐하다.",
+      img:["suwon-unhwaro-1.jpg","suwon-unhwaro-2.jpg"]},
+     {n:"이프리", k:"봉골레칼국수 13,900 · 칼치속젓파스타 16,900", addr:"수원 · 행궁동",
+      d:"행궁동의 퓨전양식집. 칼국수와 파스타를 섞은 메뉴 구성이 낯설면서도 잘 맞는다.",
+      img:["suwon-ipri-1.jpg","suwon-ipri-2.jpg"]},
+     {n:"카미참치", k:"참치 전문점", addr:"수원 · 영통역",
+      d:"영통역 참치 전문점. 부위별로 얼음 위에 깔아 내주는 구성이 푸짐하다.",
+      img:["suwon-kamichamchi.jpg"]}],
+   spots:[]},
 
   {n:"포항", st:"포항역", line:"동해미각선", km:391, pres:"이정현·이규형", x:371, y:291,
    memo:"물회는 육수 없이 고추장에 먼저 비벼 먹는 게 정통 포항식이다.",
@@ -670,6 +683,22 @@ svgEl.addEventListener('pointermove',e=>{
 /* ================== 이동 ================== */
 let cur=0, curLen=LEN[0], curAng=0, anim=null;
 
+/* 화면 전환은 지연 실행이라, 도중에 다른 곳으로 이동하면 뒤늦게 엉뚱한 화면 위로 튀어나온다.
+   항상 가장 마지막 예약 하나만 살아남도록 핸들을 공유한다 */
+let pending=null;
+function schedule(fn,ms){ clearTimeout(pending); pending=setTimeout(fn,ms); }
+function cancelPending(){ clearTimeout(pending); pending=null; }
+
+/* 다음/이전 역으로. 키보드·리모컨과 소개 화면의 '다음 역' 버튼이 공유한다 */
+function step(d){
+  if(anim) return;                        // 이동 중에는 무시
+  const i=cur+d;
+  if(i<0||i>=S.length) return;            // 양끝에서는 정지
+  sheet.classList.remove('open');
+  closeQuiz(false);                       // 열려 있으면 유튜브까지 정리
+  goTo(i);
+}
+
 function drawTrain(len, ang){
   const p=route.getPointAtLength(len);
   const inv=1/scale;
@@ -688,7 +717,7 @@ const prog=document.getElementById('prog');
 function goTo(i){
   // 이미 정차 중인 역을 다시 클릭해도 퀴즈부터. 소개만 볼 땐 패널의 버튼을 쓰면 된다
   if(i===cur && !anim){ openQuiz(i); return; }
-  cancelAnimationFrame(anim);
+  cancelAnimationFrame(anim); cancelPending();
   const from=curLen, to=LEN[i], dist=Math.abs(to-from);
   const dur = RM ? 0 : Math.min(3400, 700 + dist*3.2);
   const t0=performance.now();
@@ -708,7 +737,7 @@ function goTo(i){
       anim=null; cur=i;
       arrive(i);
       // 도착하면 소개보다 퀴즈가 먼저 뜬다. 퀴즈를 마치거나 건너뛰면 소개로 이동
-      setTimeout(()=>openQuiz(i), 260);
+      schedule(()=>openQuiz(i), 260);
     }
   }
   anim=requestAnimationFrame(frame);
@@ -767,6 +796,11 @@ function openSheet(i){
     `<p class="sec-lab">찐 맛집 — ${s.shops.length}곳</p>` +
     s.shops.map(shopHTML).join('') +
     (s.spots.length ? `<p class="sec-lab">찐 관광 스팟 — ${s.spots.length}곳</p>` + s.spots.map(shopHTML).join('') : '');
+  const nx=document.getElementById('shNext'), last=i>=S.length-1;
+  nx.textContent = last ? '여정 끝 · 전체 노선 보기' : `다음 역: ${S[i+1].n} →`;
+  nx.onclick = last
+    ? ()=>{ sheet.classList.remove('open'); setZoom(1); }
+    : ()=>step(1);
   sheet.classList.add('open');
   sheet.querySelector('.closebtn').focus();
 }
@@ -801,15 +835,56 @@ lbNext.onclick=()=>lbMove(1);
 document.getElementById('lbClose').onclick=lbClose;
 lb.addEventListener('click',e=>{ if(e.target===lb||e.target===lbImg) lbClose(); });
 
+/* 발표자가 리모컨·키보드만으로 진행할 수 있도록, 위에 떠 있는 화면부터 순서대로 키를 처리한다.
+   프레젠테이션 리모컨은 보통 PageDown/PageUp 또는 방향키를 보낸다 */
+const KEY_NEXT=['ArrowRight','PageDown',' ','Spacebar'];
+const KEY_PREV=['ArrowLeft','PageUp'];
 document.addEventListener('keydown',e=>{
-  // 확대 보기가 열려 있으면 그 위에서만 키를 처리한다 (뒤의 소개 화면이 같이 닫히지 않도록)
-  if(lb.classList.contains('open')){
-    if(e.key==='Escape'){ e.preventDefault(); lbClose(); }
-    else if(e.key==='ArrowLeft') lbMove(-1);
-    else if(e.key==='ArrowRight') lbMove(1);
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const next=KEY_NEXT.includes(e.key), prev=KEY_PREV.includes(e.key);
+
+  // 1) 주관식 답을 입력하는 중이면 키를 가로채지 않는다 (Space가 역 이동이 되면 안 된다)
+  const t=e.target;
+  if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA')){
+    if(e.key==='Escape') t.blur();
     return;
   }
-  if(e.key==='Escape'){ sheet.classList.remove('open'); quiz.classList.remove('open'); }
+
+  // 2) 사진 확대 보기
+  if(lb.classList.contains('open')){
+    if(e.key==='Escape'){ e.preventDefault(); lbClose(); }
+    else if(prev){ e.preventDefault(); lbMove(-1); }
+    else if(next){ e.preventDefault(); lbMove(1); }
+    return;
+  }
+
+  // 3) 도착 퀴즈 — 해설이 공개된 뒤에만 다음으로 넘어간다 (답을 건너뛰지 않도록)
+  if(quiz.classList.contains('open')){
+    if(e.key==='Escape'){ e.preventDefault(); closeQuiz(false); return; }
+    if(next){
+      const go=qBody.querySelector('.q-fb.show .q-next');
+      if(go){ e.preventDefault(); go.click(); }
+    }
+    return;
+  }
+
+  // 4) 지역 소개
+  if(sheet.classList.contains('open')){
+    if(e.key==='Escape'){ sheet.classList.remove('open'); return; }
+    if(next){ e.preventDefault(); step(1); }
+    else if(prev){ e.preventDefault(); step(-1); }
+    return;
+  }
+
+  // 5) 출발 화면
+  if(intro.style.display!=='none' && document.body.contains(intro)){
+    if(next){ e.preventDefault(); document.getElementById('introGo').click(); }
+    return;
+  }
+
+  // 6) 지도
+  if(next){ e.preventDefault(); step(1); }
+  else if(prev){ e.preventDefault(); step(-1); }
 });
 
 /* ================== 도착 퀴즈 ================== */
@@ -835,7 +910,7 @@ const QUIZ = {
      hot:[{x:15,y:55,w:35,h:16},{x:53.5,y:55,w:35.5,h:16},{x:15,y:73,w:35,h:16},{x:53.5,y:73,w:35.5,h:16}],
      opts:["9개","10개","11개","12개"], ans:2,
      why:"광나루·잠실·뚝섬·잠원·반포·이촌·여의도·양화·망원·난지·강서, 총 11개다."}],
-  안산:[
+  수원:[
     {t:'mc', q:"경기도의 시(市) 개수는?", card:"quiz-gyeonggi-city.jpg",
      hot:[{x:14,y:38,w:24,h:22},{x:38.5,y:38,w:22,h:22},{x:62,y:38,w:24,h:22},{x:24,y:63,w:24,h:24},{x:50,y:63,w:24,h:24}],
      opts:["24개","26개","28개","30개","32개"], ans:2,
@@ -899,7 +974,7 @@ function openQuiz(i){
 function closeQuiz(toSheet){
   quiz.classList.remove('open');
   qBody.innerHTML='';               // 유튜브 영상 재생 정지
-  if(toSheet) setTimeout(()=>openSheet(qSt),120);
+  if(toSheet) schedule(()=>openSheet(qSt),120);
 }
 function renderQ(){
   const s=S[qSt], list=QUIZ[s.n], Q=list[qIdx], last=qIdx===list.length-1;
@@ -1020,6 +1095,7 @@ function qStage(){
 }
 function qNext(){ qIdx++; renderQ(); quiz.querySelector('.quiz-in').scrollTop=0; }
 document.getElementById('qSkip').onclick=()=>closeQuiz(true);
+document.getElementById('qRetry').onclick=()=>{ renderQ(); quiz.querySelector('.quiz-in').scrollTop=0; };
 
 /* ================== 드롭다운 ================== */
 const sel=document.getElementById('sel');
@@ -1044,15 +1120,16 @@ function departTo(i){
     const e=1-Math.pow(1-k,3);                   // ease-out
     tr.setAttribute('transform',
       `translate(${p.x+offX*(1-e)},${p.y+offY*(1-e)}) scale(${1/scale}) rotate(${ang})`);
-    if(k<1) requestAnimationFrame(frame);
+    if(k<1) anim=requestAnimationFrame(frame);
     else{
+      anim=null;
       curAng=angleAt(LEN[i]);
       drawTrain(curLen, curAng);
       arrive(i);
-      setTimeout(()=>openQuiz(i), 300);
+      schedule(()=>openQuiz(i), 300);
     }
   }
-  requestAnimationFrame(frame);
+  anim=requestAnimationFrame(frame);
 }
 const intro=document.getElementById('intro');
 document.getElementById('introGo').onclick=()=>{
