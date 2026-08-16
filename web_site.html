@@ -1,636 +1,1822 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>찐로컬 맛집,여가 찐이다!</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@300;500;700&family=IBM+Plex+Sans+KR:wght@300;400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
-<style>
-:root{
-  --paper:#D9E3DA;
-  --land:#EDF2EC;
-  --sea:#CDDCD8;
-  --ink:#16283F;
-  --ink-soft:#5C6E75;
-  --punch:#B0313B;
-  --line:#9BAFA0;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--paper);
-  background-image:repeating-linear-gradient(90deg,rgba(22,40,63,.03) 0 1px,transparent 1px 4px);
-  color:var(--ink);font-family:"IBM Plex Sans KR",sans-serif;font-weight:300;line-height:1.7;
-  -webkit-font-smoothing:antialiased;
-  height:100dvh;display:flex;flex-direction:column;overflow:hidden;
-}
-.mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>찐로컬 맛집,여가 찐이다!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@300;500;700&family=IBM+Plex+Sans+KR:wght@300;400;600&family=IBM+Plex+Mono:wght@400;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --paper: #D9E3DA;
+      --land: #EDF2EC;
+      --sea: #CDDCD8;
+      --ink: #16283F;
+      --ink-soft: #5C6E75;
+      --punch: #B0313B;
+      --line: #9BAFA0;
+    }
 
-/* ---------- 헤더 ---------- */
-header{border-bottom:1.5px solid var(--ink);padding:12px 26px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;flex-shrink:0}
-.brand{font-family:"Hahmlet",serif;font-weight:700;letter-spacing:.04em;font-size:16px}
-.brand b{color:var(--punch)}
-.brand small{display:block;font-family:"IBM Plex Mono",monospace;font-weight:400;font-size:9.5px;letter-spacing:.22em;color:var(--ink-soft);margin-top:2px}
-.picker{display:flex;align-items:center;gap:10px}
-.picker label{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-soft)}
-select{
-  font:inherit;font-size:14px;padding:8px 34px 8px 14px;cursor:pointer;
-  background:var(--land) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7'><path d='M0 0h11L5.5 7z' fill='%2316283F'/></svg>") no-repeat right 13px center;
-  border:1.5px solid var(--ink);color:var(--ink);border-radius:0;appearance:none;
-}
-select:focus-visible{outline:2px solid var(--punch);outline-offset:2px}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-/* ---------- 레이아웃 ---------- */
-.stage{display:grid;grid-template-columns:1fr 372px;flex:1;min-height:0}
-.mapbox{position:relative;border-right:1.5px solid var(--ink);overflow:hidden;background:var(--sea);min-height:0}
-svg.map{display:block;width:100%;height:100%;cursor:grab}
-svg.map.dragging{cursor:grabbing}
-#viewport{transition:transform .9s cubic-bezier(.4,0,.2,1)}
-.nomotion #viewport{transition:none}
+    body {
+      background: var(--paper);
+      background-image: repeating-linear-gradient(90deg, rgba(22, 40, 63, .03) 0 1px, transparent 1px 4px);
+      color: var(--ink);
+      font-family: "IBM Plex Sans KR", sans-serif;
+      font-weight: 300;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
-/* 지도 요소 */
-.nk{fill:#C4D2C9;stroke:var(--line);stroke-width:1}
-.sk{fill:var(--land);stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
-.dmz{stroke:var(--punch);stroke-width:1.4;stroke-dasharray:5 4;fill:none;opacity:.65}
-.route-bg{fill:none;stroke:var(--line);stroke-width:2.4;stroke-dasharray:6 5;stroke-linecap:round}
-.route-done{fill:none;stroke:var(--punch);stroke-width:2.6;stroke-linecap:round}
-.stn-hit{fill:transparent;cursor:pointer}
-.stn-dot{fill:var(--land);stroke:var(--ink);stroke-width:2;transition:fill .25s,stroke .25s}
-.stn-lab{font-family:"Hahmlet",serif;font-weight:500;font-size:14px;fill:var(--ink);pointer-events:none}
-.stn-sub{font-family:"IBM Plex Mono",monospace;font-size:7.5px;letter-spacing:.14em;fill:var(--ink-soft);pointer-events:none}
-.stn.visited .stn-dot{fill:var(--punch);stroke:var(--punch)}
-.stn.here .stn-dot{fill:var(--punch);stroke:var(--ink);stroke-width:2.6}
-.stn:hover .stn-dot{fill:var(--punch)}
-.stn:hover .stn-lab{fill:var(--punch)}
-.stn.here .ring{stroke:var(--punch);fill:none;stroke-width:1.4;opacity:.55;animation:pulse 2.2s ease-out infinite}
-@keyframes pulse{0%{r:9;opacity:.6}100%{r:22;opacity:0}}
-.jeju{fill:var(--land);stroke:var(--ink);stroke-width:1.2}
-.jeju-lab{font-family:"IBM Plex Mono",monospace;font-size:7px;letter-spacing:.16em;fill:var(--ink-soft)}
-.nk-lab{font-family:"IBM Plex Mono",monospace;font-size:8px;letter-spacing:.3em;fill:#8B9C90}
+    .mono {
+      font-family: "IBM Plex Mono", monospace;
+      font-variant-numeric: tabular-nums
+    }
 
-/* 줌 컨트롤 */
-.zoom{position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;gap:-1px}
-.zoom button{
-  width:40px;height:40px;font:inherit;font-size:18px;cursor:pointer;
-  background:var(--land);border:1.5px solid var(--ink);margin-bottom:-1.5px;color:var(--ink);
-  display:grid;place-content:center;transition:background .18s,color .18s;
-}
-.zoom button:last-child{font-size:9px;letter-spacing:.08em;font-family:"IBM Plex Mono",monospace}
-.zlev{
-  width:40px;height:24px;display:grid;place-content:center;font-size:9px;letter-spacing:.02em;
-  background:var(--land);border:1.5px solid var(--ink);margin-bottom:-1.5px;color:var(--ink-soft);
-}
-.zoom button:hover{background:var(--ink);color:var(--land)}
-.hint{
-  position:absolute;left:16px;bottom:16px;font-family:"IBM Plex Mono",monospace;
-  font-size:9.5px;letter-spacing:.14em;color:var(--ink-soft);background:rgba(237,242,236,.85);
-  padding:6px 11px;border:1px solid var(--line);
-}
+    /* ---------- 헤더 ---------- */
+    header {
+      border-bottom: 1.5px solid var(--ink);
+      padding: 12px 26px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      flex-shrink: 0
+    }
 
-/* ---------- 요약 패널 ---------- */
-.panel{background:var(--land);display:flex;flex-direction:column}
-.p-status{
-  padding:14px 24px;border-bottom:1.5px solid var(--ink);
-  display:flex;justify-content:space-between;align-items:center;gap:12px;
-  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.18em;color:var(--ink-soft);
-}
-.p-status b{color:var(--punch);font-weight:600}
-.p-body{padding:30px 24px;flex:1;min-height:0;overflow-y:auto}
-.p-seq{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;color:var(--ink-soft)}
-.p-name{font-family:"Hahmlet",serif;font-weight:700;font-size:52px;line-height:1.02;letter-spacing:-.02em;margin:8px 0 4px}
-.p-name b{color:var(--punch)}
-.p-line{font-size:13px;color:var(--ink-soft);letter-spacing:.02em}
-.p-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.p-facts div span{display:block;font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.18em;color:var(--ink-soft)}
-.p-facts div strong{font-family:"Hahmlet",serif;font-weight:500;font-size:17px}
-.p-facts div strong.sm{font-size:14px;line-height:1.3;display:inline-block;margin-top:3px}
-.p-memo{font-size:14px;color:#33495C;border-left:2px solid var(--punch);padding-left:14px;margin-bottom:24px}
-.p-tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:26px}
-.p-tags span{border:1px solid var(--line);padding:5px 12px;font-size:12px;letter-spacing:.02em}
-.p-cta{
-  width:100%;font:inherit;font-size:13px;font-weight:600;letter-spacing:.1em;cursor:pointer;
-  background:var(--ink);color:var(--land);border:none;padding:15px;transition:background .2s;
-}
-.p-cta:hover{background:var(--punch)}
-.fade{animation:fade .45s ease}
-@keyframes fade{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+    .brand {
+      font-family: "Hahmlet", serif;
+      font-weight: 700;
+      letter-spacing: .04em;
+      font-size: 16px
+    }
 
-/* ---------- 상세 ---------- */
-.sheet{position:fixed;inset:0;z-index:90;display:none}
-.sheet.open{display:block}
-.sheet-bg{position:absolute;inset:0;background:rgba(22,40,63,.42);backdrop-filter:blur(3px)}
-.sheet-in{
-  position:absolute;inset:0;
-  background:var(--land);overflow-y:auto;
-  animation:rise .34s cubic-bezier(.3,.9,.3,1);
-}
-@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.sheet-head{padding:22px clamp(20px,4vw,56px);border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;position:sticky;top:0;background:var(--land);z-index:2}
-.sheet-head h2{font-family:"Hahmlet",serif;font-weight:700;font-size:clamp(30px,3.4vw,48px);line-height:1.05}
-.sheet-head p{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--ink-soft);margin-top:6px}
-.closebtn{font:inherit;font-size:24px;line-height:1;background:none;border:1.5px solid var(--ink);width:44px;height:44px;cursor:pointer;color:var(--ink);flex-shrink:0}
-.closebtn:hover{background:var(--ink);color:var(--land)}
-.headtools{display:flex;gap:12px;align-items:flex-start;flex-shrink:0}
-.closewrap{flex-shrink:0}
-.sheet-next{width:auto;padding:12px 20px;font-size:12px;flex-shrink:0}
-.quiz-retry{opacity:.55;padding:10px 12px}
-.quiz-retry:hover{opacity:1}
-.esc{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.16em;color:var(--ink-soft);text-align:center;margin-top:5px}
-.sheet-body{
-  padding:32px clamp(20px,4vw,56px) 72px;
-  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));
-  gap:0 36px;align-items:start;
-}
-.sec-lab{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.24em;color:var(--punch);border-bottom:1px solid var(--line);padding-bottom:8px;margin:26px 0 22px;grid-column:1/-1}
-.sec-lab:first-child{margin-top:0}
-.shop{border-left:2px solid var(--punch);padding-left:16px;margin-bottom:34px}
-.shop h3{font-family:"Hahmlet",serif;font-weight:500;font-size:22px}
-.shop .kind{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.14em;color:var(--ink-soft);margin:2px 0 9px}
-.shop p{font-size:14px;color:#33495C}
-.shop .again{display:inline-block;margin-top:10px;font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.14em;border:1px solid var(--line);padding:3px 10px;color:var(--ink-soft)}
-.shop-imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:8px;margin-top:12px}
-.shop-imgs img{width:100%;aspect-ratio:4/3;max-height:250px;object-fit:cover;border:1.5px solid var(--ink);display:block;background:var(--sea);
-  cursor:zoom-in;transition:opacity .15s}
-.shop-imgs img:hover{opacity:.82}
+    .brand b {
+      color: var(--punch)
+    }
 
-/* ---------- 사진 확대 보기 ---------- */
-.lightbox{position:fixed;inset:0;z-index:110;display:none;background:rgba(22,40,63,.93);backdrop-filter:blur(4px)}
-.lightbox.open{display:grid;place-content:center}
-.lightbox img{max-width:92vw;max-height:84vh;object-fit:contain;display:block;border:1.5px solid var(--land);
-  background:var(--ink);animation:rise .28s cubic-bezier(.3,.9,.3,1)}
-.lb-btn{position:absolute;font:inherit;line-height:1;background:rgba(237,242,236,.1);border:1.5px solid var(--land);
-  color:var(--land);cursor:pointer;display:grid;place-content:center;transition:background .18s,color .18s}
-.lb-btn:hover{background:var(--land);color:var(--ink)}
-.lb-close{top:20px;right:20px;width:46px;height:46px;font-size:24px}
-.lb-nav{top:50%;transform:translateY(-50%);width:52px;height:76px;font-size:30px}
-.lb-prev{left:20px}
-.lb-next{right:20px}
-.lb-cap{position:absolute;left:0;right:0;bottom:22px;text-align:center;color:var(--land);
-  font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.18em}
-@media (max-width:920px){
-  .lb-nav{width:42px;height:62px;font-size:24px}
-  .lb-prev{left:8px}
-  .lb-next{right:8px}
-}
+    .brand small {
+      display: block;
+      font-family: "IBM Plex Mono", monospace;
+      font-weight: 400;
+      font-size: 9.5px;
+      letter-spacing: .22em;
+      color: var(--ink-soft);
+      margin-top: 2px
+    }
 
-/* ---------- 출발 화면 ---------- */
-.intro{position:fixed;inset:0;z-index:100;background:var(--paper);
-  background-image:repeating-linear-gradient(90deg,rgba(22,40,63,.03) 0 1px,transparent 1px 4px);
-  display:grid;place-content:center;text-align:center;padding:32px;transition:opacity .38s ease}
-.intro.hide{opacity:0;pointer-events:none}
-.intro-tag{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.24em;color:var(--ink-soft)}
-.intro-title{font-family:"Hahmlet",serif;font-weight:700;font-size:clamp(34px,6vw,72px);line-height:1.1;letter-spacing:-.02em;margin:14px 0 10px}
-.intro-title b{color:var(--punch)}
-.intro-sub{font-size:clamp(14px,1.6vw,17px);color:var(--ink-soft)}
-.intro-flow{display:inline-block;margin-top:26px;border:1px dashed var(--line);padding:12px 20px;font-size:13px;color:#33495C}
-.intro-flow b{color:var(--punch);font-weight:600}
-.intro-go{display:block;margin:30px auto 0;font:inherit;font-size:16px;font-weight:600;letter-spacing:.08em;cursor:pointer;
-  background:var(--ink);color:var(--land);border:none;padding:18px 40px;transition:background .2s}
-.intro-go:hover{background:var(--punch)}
-.intro-rail{width:min(420px,80vw);height:1.5px;background:var(--line);margin:34px auto 0;position:relative}
-.intro-rail span{position:absolute;top:-4px;width:9px;height:9px;background:var(--punch);border-radius:50%}
-.intro-rail span:nth-child(1){left:0}
-.intro-rail span:nth-child(2){left:50%;transform:translateX(-50%);background:var(--line)}
-.intro-rail span:nth-child(3){right:0;background:var(--line)}
+    .picker {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
 
-/* ---------- 도착 퀴즈 ---------- */
-.quiz{position:fixed;inset:0;z-index:95;display:none}
-.quiz.open{display:block}
-.quiz-in{position:absolute;inset:0;background:var(--land);overflow-y:auto;animation:rise .34s cubic-bezier(.3,.9,.3,1)}
-.quiz-head{padding:20px clamp(20px,4vw,56px);border-bottom:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:center;gap:16px;position:sticky;top:0;background:var(--land);z-index:2}
-.quiz-head h2{font-family:"Hahmlet",serif;font-weight:700;font-size:clamp(26px,3vw,40px);line-height:1.05}
-.quiz-head h2 b{color:var(--punch)}
-.quiz-tag{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--punch);margin-bottom:4px}
-.quiz-skip{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;background:none;border:1.5px solid var(--ink);padding:10px 16px;cursor:pointer;color:var(--ink);flex-shrink:0}
-.quiz-skip:hover{background:var(--ink);color:var(--land)}
-.quiz-body{max-width:940px;margin:0 auto;padding:34px clamp(20px,4vw,56px) 80px}
-.q-title{font-family:"Hahmlet",serif;font-weight:500;font-size:clamp(20px,2.4vw,30px);line-height:1.35}
-.q-img{display:block;max-width:100%;max-height:46vh;margin:22px auto 0;border:1.5px solid var(--ink);background:#fff}
-.q-img.sm{max-height:36vh;margin:16px 0 0}
-.q-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:10px;margin-top:24px}
-.q-opts.ox{grid-template-columns:repeat(2,1fr)}
-.q-opt{font:inherit;font-size:15px;text-align:left;cursor:pointer;background:var(--land);border:1.5px solid var(--ink);color:var(--ink);padding:14px 16px;display:flex;align-items:center;gap:10px;transition:background .15s,color .15s}
-.q-opt .qn{font-family:"IBM Plex Mono",monospace;font-size:10px;border:1px solid var(--line);padding:1px 7px;color:inherit}
-.q-opt .qn:empty{display:none}
-.q-opt:hover{background:var(--ink);color:var(--land)}
-.q-opt.q-big{justify-content:center;font-size:24px;font-weight:600;padding:24px}
-.q-opt:disabled{pointer-events:none}
-.q-opt.wrong{opacity:.4;text-decoration:line-through;animation:shake .3s}
-.q-opt.right{background:var(--punch);border-color:var(--punch);color:var(--land)}
-@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-.q-fb{display:none;margin-top:28px;border-left:2px solid var(--punch);padding-left:16px}
-.q-fb.show{display:block;animation:fade .45s ease}
-.q-fb b{font-family:"Hahmlet",serif;font-size:20px;color:var(--punch)}
-.q-fb p{font-size:15px;color:#33495C;margin-top:6px;max-width:70ch}
-.q-next{width:auto;margin-top:22px;padding:14px 26px}
-/* 주관식 (3단계 힌트) */
-.q-stage{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.2em;color:var(--punch);margin-top:24px}
-.q-stage+.q-img{margin-top:10px}
-.q-tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;justify-content:center}
-.q-inputrow{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
-.q-input{flex:1;min-width:220px;font:inherit;font-size:16px;padding:13px 16px;border:1.5px solid var(--ink);background:#fff;color:var(--ink);border-radius:0}
-.q-input:focus-visible{outline:2px solid var(--punch);outline-offset:2px}
-.q-go{flex:0 0 auto}
-.q-miss{display:none;font-size:14px;font-weight:600;color:var(--punch);margin-top:12px}
-.q-miss.show{display:block;animation:shake .3s}
-/* 사진 카드형 보기 */
-.q-opts.cards{grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr))}
-.q-opt.q-card{flex-direction:column;align-items:stretch;padding:10px 10px 12px}
-.q-opt.q-card img{width:100%;height:150px;object-fit:contain;background:#fff;border:1px solid var(--line)}
-.q-opt.q-card .q-lab{justify-content:center;margin-top:10px}
-.q-lab{display:flex;align-items:center;gap:10px}
-/* 영상 퀴즈 */
-.q-vids{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(380px,100%),1fr));gap:14px;margin-top:22px}
-.q-vids iframe{width:100%;aspect-ratio:16/9;border:1.5px solid var(--ink);background:#000}
-/* 원본 퀴즈 카드 이미지 */
-.aicard{margin-top:22px;border:1.5px solid var(--ink);background:#fff;padding:10px}
-.aicard img{width:100%;max-height:52vh;object-fit:contain;display:block}
-.q-fb .aicard{margin-top:16px}
-/* 카드 위 투명 클릭영역 — 이미지 원본 비율을 유지해야 좌표가 어긋나지 않는다 */
-.hotlayer{position:relative;margin:0 auto;line-height:0}
-.hotlayer img{width:100%;height:auto;max-height:none;object-fit:fill}
-.hot{position:absolute;padding:0;cursor:pointer;background:transparent;border:3px solid transparent;border-radius:12px;
-  transition:background .15s,border-color .15s}
-.hot:hover:not(:disabled){border-color:var(--punch);background:rgba(176,49,59,.16)}
-.hot:focus-visible{outline:3px solid var(--punch);outline-offset:3px}
-.hot:disabled{cursor:default}
-.hotmark{position:absolute;top:-15px;right:-15px;width:32px;height:32px;border-radius:50%;
-  display:none;place-content:center;font-size:17px;font-weight:700;color:#fff;border:2.5px solid #fff;line-height:1}
-.hot.right{border-color:var(--punch);background:rgba(176,49,59,.22)}
-.hot.right .hotmark{display:grid;background:var(--punch)}
-.hot.right .hotmark::before{content:"✓"}
-.hot.wrong{border-color:var(--ink);background:rgba(22,40,63,.6)}
-.hot.wrong .hotmark{display:grid;background:var(--ink)}
-.hot.wrong .hotmark::before{content:"✕"}
-.hot-hint{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.16em;color:var(--ink-soft);
-  text-align:center;margin-top:12px;line-height:1.6}
+    .picker label {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--ink-soft)
+    }
 
-@media (max-width:920px){
-  body{height:auto;overflow:visible;display:block}
-  .stage{grid-template-columns:1fr;display:grid}
-  .mapbox{border-right:none;border-bottom:1.5px solid var(--ink);height:58vh}
-  .p-name{font-size:42px}
-  header{padding:12px 18px}
-  .picker{width:100%}
-  select{flex:1}
-}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-</style>
+    select {
+      font: inherit;
+      font-size: 14px;
+      padding: 8px 34px 8px 14px;
+      cursor: pointer;
+      background: var(--land) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='11' height='7'><path d='M0 0h11L5.5 7z' fill='%2316283F'/></svg>") no-repeat right 13px center;
+      border: 1.5px solid var(--ink);
+      color: var(--ink);
+      border-radius: 0;
+      appearance: none;
+    }
+
+    select:focus-visible {
+      outline: 2px solid var(--punch);
+      outline-offset: 2px
+    }
+
+    /* ---------- 레이아웃 ---------- */
+    .stage {
+      display: grid;
+      grid-template-columns: 1fr 372px;
+      flex: 1;
+      min-height: 0
+    }
+
+    .mapbox {
+      position: relative;
+      border-right: 1.5px solid var(--ink);
+      overflow: hidden;
+      background: var(--sea);
+      min-height: 0
+    }
+
+    svg.map {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab
+    }
+
+    svg.map.dragging {
+      cursor: grabbing
+    }
+
+    #viewport {
+      transition: transform .9s cubic-bezier(.4, 0, .2, 1)
+    }
+
+    .nomotion #viewport {
+      transition: none
+    }
+
+    /* 지도 요소 */
+    .nk {
+      fill: #C4D2C9;
+      stroke: var(--line);
+      stroke-width: 1
+    }
+
+    .sk {
+      fill: var(--land);
+      stroke: var(--ink);
+      stroke-width: 1.4;
+      stroke-linejoin: round
+    }
+
+    .dmz {
+      stroke: var(--punch);
+      stroke-width: 1.4;
+      stroke-dasharray: 5 4;
+      fill: none;
+      opacity: .65
+    }
+
+    .route-bg {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 2.4;
+      stroke-dasharray: 6 5;
+      stroke-linecap: round
+    }
+
+    .route-done {
+      fill: none;
+      stroke: var(--punch);
+      stroke-width: 2.6;
+      stroke-linecap: round
+    }
+
+    .stn-hit {
+      fill: transparent;
+      cursor: pointer
+    }
+
+    .stn-dot {
+      fill: var(--land);
+      stroke: var(--ink);
+      stroke-width: 2;
+      transition: fill .25s, stroke .25s
+    }
+
+    .stn-lab {
+      font-family: "Hahmlet", serif;
+      font-weight: 500;
+      font-size: 14px;
+      fill: var(--ink);
+      pointer-events: none
+    }
+
+    .stn-sub {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 7.5px;
+      letter-spacing: .14em;
+      fill: var(--ink-soft);
+      pointer-events: none
+    }
+
+    .stn.visited .stn-dot {
+      fill: var(--punch);
+      stroke: var(--punch)
+    }
+
+    .stn.here .stn-dot {
+      fill: var(--punch);
+      stroke: var(--ink);
+      stroke-width: 2.6
+    }
+
+    .stn:hover .stn-dot {
+      fill: var(--punch)
+    }
+
+    .stn:hover .stn-lab {
+      fill: var(--punch)
+    }
+
+    .stn.here .ring {
+      stroke: var(--punch);
+      fill: none;
+      stroke-width: 1.4;
+      opacity: .55;
+      animation: pulse 2.2s ease-out infinite
+    }
+
+    @keyframes pulse {
+      0% {
+        r: 9;
+        opacity: .6
+      }
+
+      100% {
+        r: 22;
+        opacity: 0
+      }
+    }
+
+    .jeju {
+      fill: var(--land);
+      stroke: var(--ink);
+      stroke-width: 1.2
+    }
+
+    .jeju-lab {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 7px;
+      letter-spacing: .16em;
+      fill: var(--ink-soft)
+    }
+
+    .nk-lab {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 8px;
+      letter-spacing: .3em;
+      fill: #8B9C90
+    }
+
+    /* 줌 컨트롤 */
+    .zoom {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: -1px
+    }
+
+    .zoom button {
+      width: 40px;
+      height: 40px;
+      font: inherit;
+      font-size: 18px;
+      cursor: pointer;
+      background: var(--land);
+      border: 1.5px solid var(--ink);
+      margin-bottom: -1.5px;
+      color: var(--ink);
+      display: grid;
+      place-content: center;
+      transition: background .18s, color .18s;
+    }
+
+    .zoom button:last-child {
+      font-size: 9px;
+      letter-spacing: .08em;
+      font-family: "IBM Plex Mono", monospace
+    }
+
+    .zlev {
+      width: 40px;
+      height: 24px;
+      display: grid;
+      place-content: center;
+      font-size: 9px;
+      letter-spacing: .02em;
+      background: var(--land);
+      border: 1.5px solid var(--ink);
+      margin-bottom: -1.5px;
+      color: var(--ink-soft);
+    }
+
+    .zoom button:hover {
+      background: var(--ink);
+      color: var(--land)
+    }
+
+    .hint {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9.5px;
+      letter-spacing: .14em;
+      color: var(--ink-soft);
+      background: rgba(237, 242, 236, .85);
+      padding: 6px 11px;
+      border: 1px solid var(--line);
+    }
+
+    /* ---------- 요약 패널 ---------- */
+    .panel {
+      background: var(--land);
+      display: flex;
+      flex-direction: column
+    }
+
+    .p-status {
+      padding: 14px 24px;
+      border-bottom: 1.5px solid var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .18em;
+      color: var(--ink-soft);
+    }
+
+    .p-status b {
+      color: var(--punch);
+      font-weight: 600
+    }
+
+    .p-body {
+      padding: 30px 24px;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto
+    }
+
+    .p-seq {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .24em;
+      color: var(--ink-soft)
+    }
+
+    .p-name {
+      font-family: "Hahmlet", serif;
+      font-weight: 700;
+      font-size: 52px;
+      line-height: 1.02;
+      letter-spacing: -.02em;
+      margin: 8px 0 4px
+    }
+
+    .p-name b {
+      color: var(--punch)
+    }
+
+    .p-line {
+      font-size: 13px;
+      color: var(--ink-soft);
+      letter-spacing: .02em
+    }
+
+    .p-facts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 26px 0;
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line)
+    }
+
+    .p-facts div span {
+      display: block;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9px;
+      letter-spacing: .18em;
+      color: var(--ink-soft)
+    }
+
+    .p-facts div strong {
+      font-family: "Hahmlet", serif;
+      font-weight: 500;
+      font-size: 17px
+    }
+
+    .p-facts div strong.sm {
+      font-size: 14px;
+      line-height: 1.3;
+      display: inline-block;
+      margin-top: 3px
+    }
+
+    .p-memo {
+      font-size: 14px;
+      color: #33495C;
+      border-left: 2px solid var(--punch);
+      padding-left: 14px;
+      margin-bottom: 24px
+    }
+
+    .p-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 26px
+    }
+
+    .p-tags span {
+      border: 1px solid var(--line);
+      padding: 5px 12px;
+      font-size: 12px;
+      letter-spacing: .02em
+    }
+
+    .p-cta {
+      width: 100%;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      cursor: pointer;
+      background: var(--ink);
+      color: var(--land);
+      border: none;
+      padding: 15px;
+      transition: background .2s;
+    }
+
+    .p-cta:hover {
+      background: var(--punch)
+    }
+
+    .fade {
+      animation: fade .45s ease
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+        transform: translateY(9px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    /* ---------- 상세 ---------- */
+    .sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none
+    }
+
+    .sheet.open {
+      display: block
+    }
+
+    .sheet-bg {
+      position: absolute;
+      inset: 0;
+      background: rgba(22, 40, 63, .42);
+      backdrop-filter: blur(3px)
+    }
+
+    .sheet-in {
+      position: absolute;
+      inset: 0;
+      background: var(--land);
+      overflow-y: auto;
+      animation: rise .34s cubic-bezier(.3, .9, .3, 1);
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(16px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .sheet-head {
+      padding: 22px clamp(20px, 4vw, 56px);
+      border-bottom: 1.5px solid var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      background: var(--land);
+      z-index: 2
+    }
+
+    .sheet-head h2 {
+      font-family: "Hahmlet", serif;
+      font-weight: 700;
+      font-size: clamp(30px, 3.4vw, 48px);
+      line-height: 1.05
+    }
+
+    .sheet-head p {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--ink-soft);
+      margin-top: 6px
+    }
+
+    .closebtn {
+      font: inherit;
+      font-size: 24px;
+      line-height: 1;
+      background: none;
+      border: 1.5px solid var(--ink);
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      color: var(--ink);
+      flex-shrink: 0
+    }
+
+    .closebtn:hover {
+      background: var(--ink);
+      color: var(--land)
+    }
+
+    .headtools {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-shrink: 0
+    }
+
+    .closewrap {
+      flex-shrink: 0
+    }
+
+    .sheet-next {
+      width: auto;
+      padding: 12px 20px;
+      font-size: 12px;
+      flex-shrink: 0
+    }
+
+    .quiz-retry {
+      opacity: .55;
+      padding: 10px 12px
+    }
+
+    .quiz-retry:hover {
+      opacity: 1
+    }
+
+    .esc {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9px;
+      letter-spacing: .16em;
+      color: var(--ink-soft);
+      text-align: center;
+      margin-top: 5px
+    }
+
+    .sheet-body {
+      padding: 32px clamp(20px, 4vw, 56px) 72px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+      gap: 0 36px;
+      align-items: start;
+    }
+
+    .sec-lab {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .24em;
+      color: var(--punch);
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+      margin: 26px 0 22px;
+      grid-column: 1/-1
+    }
+
+    .sec-lab:first-child {
+      margin-top: 0
+    }
+
+    .shop {
+      border-left: 2px solid var(--punch);
+      padding-left: 16px;
+      margin-bottom: 34px
+    }
+
+    .shop h3 {
+      font-family: "Hahmlet", serif;
+      font-weight: 500;
+      font-size: 22px
+    }
+
+    .shop .kind {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .14em;
+      color: var(--ink-soft);
+      margin: 2px 0 9px
+    }
+
+    .shop p {
+      font-size: 14px;
+      color: #33495C
+    }
+
+    .shop .again {
+      display: inline-block;
+      margin-top: 10px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 9.5px;
+      letter-spacing: .14em;
+      border: 1px solid var(--line);
+      padding: 3px 10px;
+      color: var(--ink-soft)
+    }
+
+    .shop-imgs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+      gap: 8px;
+      margin-top: 12px
+    }
+
+    .shop-imgs img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      max-height: 250px;
+      object-fit: cover;
+      border: 1.5px solid var(--ink);
+      display: block;
+      background: var(--sea);
+      cursor: zoom-in;
+      transition: opacity .15s
+    }
+
+    .shop-imgs img:hover {
+      opacity: .82
+    }
+
+    /* ---------- 사진 확대 보기 ---------- */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 110;
+      display: none;
+      background: rgba(22, 40, 63, .93);
+      backdrop-filter: blur(4px)
+    }
+
+    .lightbox.open {
+      display: grid;
+      place-content: center
+    }
+
+    .lightbox img {
+      max-width: 92vw;
+      max-height: 84vh;
+      object-fit: contain;
+      display: block;
+      border: 1.5px solid var(--land);
+      background: var(--ink);
+      animation: rise .28s cubic-bezier(.3, .9, .3, 1)
+    }
+
+    .lb-btn {
+      position: absolute;
+      font: inherit;
+      line-height: 1;
+      background: rgba(237, 242, 236, .1);
+      border: 1.5px solid var(--land);
+      color: var(--land);
+      cursor: pointer;
+      display: grid;
+      place-content: center;
+      transition: background .18s, color .18s
+    }
+
+    .lb-btn:hover {
+      background: var(--land);
+      color: var(--ink)
+    }
+
+    .lb-close {
+      top: 20px;
+      right: 20px;
+      width: 46px;
+      height: 46px;
+      font-size: 24px
+    }
+
+    .lb-nav {
+      top: 50%;
+      transform: translateY(-50%);
+      width: 52px;
+      height: 76px;
+      font-size: 30px
+    }
+
+    .lb-prev {
+      left: 20px
+    }
+
+    .lb-next {
+      right: 20px
+    }
+
+    .lb-cap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 22px;
+      text-align: center;
+      color: var(--land);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: .18em
+    }
+
+    @media (max-width:920px) {
+      .lb-nav {
+        width: 42px;
+        height: 62px;
+        font-size: 24px
+      }
+
+      .lb-prev {
+        left: 8px
+      }
+
+      .lb-next {
+        right: 8px
+      }
+    }
+
+    /* ---------- 출발 화면 ---------- */
+    .intro {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--paper);
+      background-image: repeating-linear-gradient(90deg, rgba(22, 40, 63, .03) 0 1px, transparent 1px 4px);
+      display: grid;
+      place-content: center;
+      text-align: center;
+      padding: 32px;
+      transition: opacity .38s ease
+    }
+
+    .intro.hide {
+      opacity: 0;
+      pointer-events: none
+    }
+
+    .intro-tag {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: .24em;
+      color: var(--ink-soft)
+    }
+
+    .intro-title {
+      font-family: "Hahmlet", serif;
+      font-weight: 700;
+      font-size: clamp(34px, 6vw, 72px);
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      margin: 14px 0 10px
+    }
+
+    .intro-title b {
+      color: var(--punch)
+    }
+
+    .intro-sub {
+      font-size: clamp(14px, 1.6vw, 17px);
+      color: var(--ink-soft)
+    }
+
+    .intro-flow {
+      display: inline-block;
+      margin-top: 26px;
+      border: 1px dashed var(--line);
+      padding: 12px 20px;
+      font-size: 13px;
+      color: #33495C
+    }
+
+    .intro-flow b {
+      color: var(--punch);
+      font-weight: 600
+    }
+
+    .intro-go {
+      display: block;
+      margin: 30px auto 0;
+      font: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      cursor: pointer;
+      background: var(--ink);
+      color: var(--land);
+      border: none;
+      padding: 18px 40px;
+      transition: background .2s
+    }
+
+    .intro-go:hover {
+      background: var(--punch)
+    }
+
+    .intro-rail {
+      width: min(420px, 80vw);
+      height: 1.5px;
+      background: var(--line);
+      margin: 34px auto 0;
+      position: relative
+    }
+
+    .intro-rail span {
+      position: absolute;
+      top: -4px;
+      width: 9px;
+      height: 9px;
+      background: var(--punch);
+      border-radius: 50%
+    }
+
+    .intro-rail span:nth-child(1) {
+      left: 0
+    }
+
+    .intro-rail span:nth-child(2) {
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--line)
+    }
+
+    .intro-rail span:nth-child(3) {
+      right: 0;
+      background: var(--line)
+    }
+
+    /* ---------- 도착 퀴즈 ---------- */
+    .quiz {
+      position: fixed;
+      inset: 0;
+      z-index: 95;
+      display: none
+    }
+
+    .quiz.open {
+      display: block
+    }
+
+    .quiz-in {
+      position: absolute;
+      inset: 0;
+      background: var(--land);
+      overflow-y: auto;
+      animation: rise .34s cubic-bezier(.3, .9, .3, 1)
+    }
+
+    .quiz-head {
+      padding: 20px clamp(20px, 4vw, 56px);
+      border-bottom: 1.5px solid var(--ink);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      background: var(--land);
+      z-index: 2
+    }
+
+    .quiz-head h2 {
+      font-family: "Hahmlet", serif;
+      font-weight: 700;
+      font-size: clamp(26px, 3vw, 40px);
+      line-height: 1.05
+    }
+
+    .quiz-head h2 b {
+      color: var(--punch)
+    }
+
+    .quiz-tag {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--punch);
+      margin-bottom: 4px
+    }
+
+    .quiz-skip {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 11px;
+      letter-spacing: .1em;
+      background: none;
+      border: 1.5px solid var(--ink);
+      padding: 10px 16px;
+      cursor: pointer;
+      color: var(--ink);
+      flex-shrink: 0
+    }
+
+    .quiz-skip:hover {
+      background: var(--ink);
+      color: var(--land)
+    }
+
+    .quiz-body {
+      max-width: 940px;
+      margin: 0 auto;
+      padding: 34px clamp(20px, 4vw, 56px) 80px
+    }
+
+    .q-title {
+      font-family: "Hahmlet", serif;
+      font-weight: 500;
+      font-size: clamp(20px, 2.4vw, 30px);
+      line-height: 1.35
+    }
+
+    .q-img {
+      display: block;
+      max-width: 100%;
+      max-height: 46vh;
+      margin: 22px auto 0;
+      border: 1.5px solid var(--ink);
+      background: #fff
+    }
+
+    .q-img.sm {
+      max-height: 36vh;
+      margin: 16px 0 0
+    }
+
+    .q-opts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+      gap: 10px;
+      margin-top: 24px
+    }
+
+    .q-opts.ox {
+      grid-template-columns: repeat(2, 1fr)
+    }
+
+    .q-opt {
+      font: inherit;
+      font-size: 15px;
+      text-align: left;
+      cursor: pointer;
+      background: var(--land);
+      border: 1.5px solid var(--ink);
+      color: var(--ink);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background .15s, color .15s
+    }
+
+    .q-opt .qn {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      border: 1px solid var(--line);
+      padding: 1px 7px;
+      color: inherit
+    }
+
+    .q-opt .qn:empty {
+      display: none
+    }
+
+    .q-opt:hover {
+      background: var(--ink);
+      color: var(--land)
+    }
+
+    .q-opt.q-big {
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      padding: 24px
+    }
+
+    .q-opt:disabled {
+      pointer-events: none
+    }
+
+    .q-opt.wrong {
+      opacity: .4;
+      text-decoration: line-through;
+      animation: shake .3s
+    }
+
+    .q-opt.right {
+      background: var(--punch);
+      border-color: var(--punch);
+      color: var(--land)
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: none
+      }
+
+      25% {
+        transform: translateX(-5px)
+      }
+
+      75% {
+        transform: translateX(5px)
+      }
+    }
+
+    .q-fb {
+      display: none;
+      margin-top: 28px;
+      border-left: 2px solid var(--punch);
+      padding-left: 16px
+    }
+
+    .q-fb.show {
+      display: block;
+      animation: fade .45s ease
+    }
+
+    .q-fb b {
+      font-family: "Hahmlet", serif;
+      font-size: 20px;
+      color: var(--punch)
+    }
+
+    .q-fb p {
+      font-size: 15px;
+      color: #33495C;
+      margin-top: 6px;
+      max-width: 70ch
+    }
+
+    .q-next {
+      width: auto;
+      margin-top: 22px;
+      padding: 14px 26px
+    }
+
+    /* 주관식 (3단계 힌트) */
+    .q-stage {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .2em;
+      color: var(--punch);
+      margin-top: 24px
+    }
+
+    .q-stage+.q-img {
+      margin-top: 10px
+    }
+
+    .q-tools {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      justify-content: center
+    }
+
+    .q-inputrow {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap
+    }
+
+    .q-input {
+      flex: 1;
+      min-width: 220px;
+      font: inherit;
+      font-size: 16px;
+      padding: 13px 16px;
+      border: 1.5px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 0
+    }
+
+    .q-input:focus-visible {
+      outline: 2px solid var(--punch);
+      outline-offset: 2px
+    }
+
+    .q-go {
+      flex: 0 0 auto
+    }
+
+    .q-miss {
+      display: none;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--punch);
+      margin-top: 12px
+    }
+
+    .q-miss.show {
+      display: block;
+      animation: shake .3s
+    }
+
+    /* 사진 카드형 보기 */
+    .q-opts.cards {
+      grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr))
+    }
+
+    .q-opt.q-card {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 10px 10px 12px
+    }
+
+    .q-opt.q-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      background: #fff;
+      border: 1px solid var(--line)
+    }
+
+    .q-opt.q-card .q-lab {
+      justify-content: center;
+      margin-top: 10px
+    }
+
+    .q-lab {
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    /* 영상 퀴즈 */
+    .q-vids {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
+      gap: 14px;
+      margin-top: 22px
+    }
+
+    .q-vids iframe {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border: 1.5px solid var(--ink);
+      background: #000
+    }
+
+    /* 원본 퀴즈 카드 이미지 */
+    .aicard {
+      margin-top: 22px;
+      border: 1.5px solid var(--ink);
+      background: #fff;
+      padding: 10px
+    }
+
+    .aicard img {
+      width: 100%;
+      max-height: 52vh;
+      object-fit: contain;
+      display: block
+    }
+
+    .q-fb .aicard {
+      margin-top: 16px
+    }
+
+    /* 카드 위 투명 클릭영역 — 이미지 원본 비율을 유지해야 좌표가 어긋나지 않는다 */
+    .hotlayer {
+      position: relative;
+      margin: 0 auto;
+      line-height: 0
+    }
+
+    .hotlayer img {
+      width: 100%;
+      height: auto;
+      max-height: none;
+      object-fit: fill
+    }
+
+    .hot {
+      position: absolute;
+      padding: 0;
+      cursor: pointer;
+      background: transparent;
+      border: 3px solid transparent;
+      border-radius: 12px;
+      transition: background .15s, border-color .15s
+    }
+
+    .hot:hover:not(:disabled) {
+      border-color: var(--punch);
+      background: rgba(176, 49, 59, .16)
+    }
+
+    .hot:focus-visible {
+      outline: 3px solid var(--punch);
+      outline-offset: 3px
+    }
+
+    .hot:disabled {
+      cursor: default
+    }
+
+    .hotmark {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: none;
+      place-content: center;
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      border: 2.5px solid #fff;
+      line-height: 1
+    }
+
+    .hot.right {
+      border-color: var(--punch);
+      background: rgba(176, 49, 59, .22)
+    }
+
+    .hot.right .hotmark {
+      display: grid;
+      background: var(--punch)
+    }
+
+    .hot.right .hotmark::before {
+      content: "✓"
+    }
+
+    .hot.wrong {
+      border-color: var(--ink);
+      background: rgba(22, 40, 63, .6)
+    }
+
+    .hot.wrong .hotmark {
+      display: grid;
+      background: var(--ink)
+    }
+
+    .hot.wrong .hotmark::before {
+      content: "✕"
+    }
+
+    .hot-hint {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 10px;
+      letter-spacing: .16em;
+      color: var(--ink-soft);
+      text-align: center;
+      margin-top: 12px;
+      line-height: 1.6
+    }
+
+    @media (max-width:920px) {
+      body {
+        height: auto;
+        overflow: visible;
+        display: block
+      }
+
+      .stage {
+        grid-template-columns: 1fr;
+        display: grid
+      }
+
+      .mapbox {
+        border-right: none;
+        border-bottom: 1.5px solid var(--ink);
+        height: 58vh
+      }
+
+      .p-name {
+        font-size: 42px
+      }
+
+      header {
+        padding: 12px 18px
+      }
+
+      .picker {
+        width: 100%
+      }
+
+      select {
+        flex: 1
+      }
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      * {
+        animation: none !important;
+        transition: none !important
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <div class="brand">찐로컬 맛집,여가 <b>찐이다!</b><small>G팀 OPENCLASS · 찐로컬 노선도 · 9 STATIONS</small></div>
-  <div class="picker">
-    <label for="sel">목적지</label>
-    <select id="sel"></select>
-  </div>
-</header>
-
-<div class="stage">
-
-  <div class="mapbox">
-    <svg class="map" id="svg" viewBox="118 22 306 580" preserveAspectRatio="xMidYMid meet" role="img" aria-label="찐로컬 맛집·여가 노선도">
-      <g id="viewport">
-        <!-- 북측 실루엣 -->
-        <path class="nk" d="M176.4 115 L153.7 105 L97.1 100 L44.5 65 L56.6 35 L68.8 15 L40 -40 L60 -90 L30 -140 L55 -230 L340 -230 L352 -150 L392 -90 L402 -30 L372 20 L330 40 L311.5 40 L246.7 70 L210.3 70 Z"/>
-        <text class="nk-lab" x="150" y="60">NORTH</text>
-        <!-- 남측 -->
-        <path class="sk" d="M176.4 115 L210.3 70 L246.7 70 L311.5 40 L319.6 65 L360 120 L388.3 170 L398 210 L396.4 260 L411 292 L398 302 L400.5 350 L380.2 390 L356 398 L339.8 410 L315.5 415 L287.2 405 L262.9 425 L226.5 430 L194.2 445 L182 470 L161.8 445 L149.7 420 L149.7 395 L157.8 365 L165.8 335 L169.9 300 L153.7 270 L145.6 235 L165.8 210 L182 195 L174 165 L165.8 140 Z"/>
-        <!-- 군사분계선 -->
-        <path class="dmz" d="M176.4 115 L210.3 70 L246.7 70 L311.5 40"/>
-        <!-- 거제 -->
-        <ellipse class="jeju" cx="319" cy="431" rx="16" ry="9"/>
-        <!-- 제주 -->
-        <ellipse class="jeju" cx="166" cy="562" rx="29" ry="13"/>
-        <text class="jeju-lab" x="166" y="590" text-anchor="middle">JEJU · 철도 미연결</text>
-
-        <path id="route" class="route-bg"></path>
-        <path id="routeDone" class="route-done"></path>
-        <g id="stations"></g>
-        <g id="train"></g>
-      </g>
-    </svg>
-
-    <div class="hint">역 클릭 = 도착 퀴즈부터 · 휠 = 확대·축소 · 확대 후 드래그 = 이동</div>
-    <div class="zoom">
-      <button id="zin" aria-label="확대">+</button>
-      <div class="zlev mono" id="zlev">100%</div>
-      <button id="zout" aria-label="축소">−</button>
-      <button id="zreset">전체</button>
+  <header>
+    <div class="brand">찐로컬 맛집,여가 <b>찐이다!</b><small>G팀 OPENCLASS · 찐로컬 노선도 · 9 STATIONS</small></div>
+    <div class="picker">
+      <label for="sel">목적지</label>
+      <select id="sel"></select>
     </div>
+  </header>
+
+  <div class="stage">
+
+    <div class="mapbox">
+      <svg class="map" id="svg" viewBox="118 22 306 580" preserveAspectRatio="xMidYMid meet" role="img"
+        aria-label="찐로컬 맛집·여가 노선도">
+        <g id="viewport">
+          <!-- 북측 실루엣 -->
+          <path class="nk"
+            d="M176.4 115 L153.7 105 L97.1 100 L44.5 65 L56.6 35 L68.8 15 L40 -40 L60 -90 L30 -140 L55 -230 L340 -230 L352 -150 L392 -90 L402 -30 L372 20 L330 40 L311.5 40 L246.7 70 L210.3 70 Z" />
+          <text class="nk-lab" x="150" y="60">NORTH</text>
+          <!-- 남측 -->
+          <path class="sk"
+            d="M176.4 115 L210.3 70 L246.7 70 L311.5 40 L319.6 65 L360 120 L388.3 170 L398 210 L396.4 260 L411 292 L398 302 L400.5 350 L380.2 390 L356 398 L339.8 410 L315.5 415 L287.2 405 L262.9 425 L226.5 430 L194.2 445 L182 470 L161.8 445 L149.7 420 L149.7 395 L157.8 365 L165.8 335 L169.9 300 L153.7 270 L145.6 235 L165.8 210 L182 195 L174 165 L165.8 140 Z" />
+          <!-- 군사분계선 -->
+          <path class="dmz" d="M176.4 115 L210.3 70 L246.7 70 L311.5 40" />
+          <!-- 거제 -->
+          <ellipse class="jeju" cx="319" cy="431" rx="16" ry="9" />
+          <!-- 제주 -->
+          <ellipse class="jeju" cx="166" cy="562" rx="29" ry="13" />
+          <text class="jeju-lab" x="166" y="590" text-anchor="middle">JEJU · 철도 미연결</text>
+
+          <path id="route" class="route-bg"></path>
+          <path id="routeDone" class="route-done"></path>
+          <g id="stations"></g>
+          <g id="train"></g>
+        </g>
+      </svg>
+
+      <div class="hint">역 클릭 = 도착 퀴즈부터 · 휠 = 확대·축소 · 확대 후 드래그 = 이동</div>
+      <div class="zoom">
+        <button id="zin" aria-label="확대">+</button>
+        <div class="zlev mono" id="zlev">100%</div>
+        <button id="zout" aria-label="축소">−</button>
+        <button id="zreset">전체</button>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <div class="p-status">
+        <span id="stat">정차 중</span>
+        <b id="prog" class="mono">1 / 9</b>
+      </div>
+      <div class="p-body" id="pbody"></div>
+    </aside>
+
   </div>
 
-  <aside class="panel">
-    <div class="p-status">
-      <span id="stat">정차 중</span>
-      <b id="prog" class="mono">1 / 9</b>
-    </div>
-    <div class="p-body" id="pbody"></div>
-  </aside>
-
-</div>
-
-<!-- 상세 -->
-<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
-  <div class="sheet-bg" data-close></div>
-  <div class="sheet-in">
-    <div class="sheet-head">
-      <div><h2 id="shTitle"></h2><p id="shSub"></p></div>
-      <div class="headtools">
-        <button class="p-cta sheet-next" id="shNext"></button>
-        <div class="closewrap">
-          <button class="closebtn" data-close aria-label="닫기">×</button>
-          <p class="esc">ESC</p>
+  <!-- 상세 -->
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-in">
+      <div class="sheet-head">
+        <div>
+          <h2 id="shTitle"></h2>
+          <p id="shSub"></p>
+        </div>
+        <div class="headtools">
+          <button class="p-cta sheet-next" id="shNext"></button>
+          <div class="closewrap">
+            <button class="closebtn" data-close aria-label="닫기">×</button>
+            <p class="esc">ESC</p>
+          </div>
         </div>
       </div>
+      <div class="sheet-body" id="shBody"></div>
     </div>
-    <div class="sheet-body" id="shBody"></div>
   </div>
-</div>
 
-<!-- 사진 확대 보기 -->
-<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="사진 크게 보기">
-  <img id="lbImg" alt="">
-  <button class="lb-btn lb-close" id="lbClose" aria-label="닫기">×</button>
-  <button class="lb-btn lb-nav lb-prev" id="lbPrev" aria-label="이전 사진">‹</button>
-  <button class="lb-btn lb-nav lb-next" id="lbNext" aria-label="다음 사진">›</button>
-  <p class="lb-cap" id="lbCap"></p>
-</div>
-
-<!-- 출발 화면 -->
-<div class="intro" id="intro">
-  <div>
-    <p class="intro-tag">G팀 OPENCLASS · 찐로컬 노선도 · 9 STATIONS</p>
-    <h1 class="intro-title">찐로컬 맛집,여가 <b>찐이다!</b></h1>
-    <p class="intro-sub">성북에서 거제까지, 로컬만 아는 맛집과 여가 스팟을 찾아 떠나는 9개 역</p>
-    <p class="intro-flow">각 역에 <b>도착</b>하면 → <b>도착 퀴즈</b>를 풀고 → <b>지역 소개</b>로 이어집니다</p>
-    <button class="intro-go" id="introGo">🚂 성북역으로 출발하기</button>
-    <div class="intro-rail"><span></span><span></span><span></span></div>
+  <!-- 사진 확대 보기 -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="사진 크게 보기">
+    <img id="lbImg" alt="">
+    <button class="lb-btn lb-close" id="lbClose" aria-label="닫기">×</button>
+    <button class="lb-btn lb-nav lb-prev" id="lbPrev" aria-label="이전 사진">‹</button>
+    <button class="lb-btn lb-nav lb-next" id="lbNext" aria-label="다음 사진">›</button>
+    <p class="lb-cap" id="lbCap"></p>
   </div>
-</div>
 
-<!-- 도착 퀴즈 -->
-<div class="quiz" id="quiz" role="dialog" aria-modal="true" aria-labelledby="qHead">
-  <div class="quiz-in">
-    <div class="quiz-head">
-      <div><p class="quiz-tag" id="qTag"></p><h2 id="qHead"></h2></div>
-      <div class="headtools">
-        <button class="quiz-skip quiz-retry" id="qRetry" title="이 문제를 처음 상태로">↺ 다시</button>
-        <button class="quiz-skip" id="qSkip">건너뛰고 소개 보기 →</button>
+  <!-- 출발 화면 -->
+  <div class="intro" id="intro">
+    <div>
+      <p class="intro-tag">G팀 OPENCLASS · 찐로컬 노선도 · 9 STATIONS</p>
+      <h1 class="intro-title">찐로컬 맛집,여가 <b>찐이다!</b></h1>
+      <p class="intro-sub">성북에서 거제까지, 로컬만 아는 맛집과 여가 스팟을 찾아 떠나는 9개 역</p>
+      <p class="intro-flow">각 역에 <b>도착</b>하면 → <b>도착 퀴즈</b>를 풀고 → <b>지역 소개</b>로 이어집니다</p>
+      <button class="intro-go" id="introGo">🚂 성북역으로 출발하기</button>
+      <div class="intro-rail"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- 도착 퀴즈 -->
+  <div class="quiz" id="quiz" role="dialog" aria-modal="true" aria-labelledby="qHead">
+    <div class="quiz-in">
+      <div class="quiz-head">
+        <div>
+          <p class="quiz-tag" id="qTag"></p>
+          <h2 id="qHead"></h2>
+        </div>
+        <div class="headtools">
+          <button class="quiz-skip quiz-retry" id="qRetry" title="이 문제를 처음 상태로">↺ 다시</button>
+          <button class="quiz-skip" id="qSkip">건너뛰고 소개 보기 →</button>
+        </div>
       </div>
+      <div class="quiz-body" id="qBody"></div>
     </div>
-    <div class="quiz-body" id="qBody"></div>
   </div>
-</div>
 
-<script>
-/* ================== 데이터 ================== */
-const S = [
-  {n:"성북", st:"성북역", line:"찐로컬선 기점", km:0, pres:"황준성", x:206, y:110,
-   memo:"고대 앞 골목의 불맛 잡채밥으로 시작해서, 성북천 벚꽃길 산책으로 끝나는 코스다.",
-   tags:["잡채밥","숯불 돼지갈비","청국장","성북천 벚꽃"],
-   shops:[
-     {n:"안동반점", k:"잡채밥 10,000 · 고기튀김(소) 15,000", addr:"서울 성북구 고려대로1길 35-1",
-      d:"고추기름에 버무린 불맛 가득 잡채밥 레전드. 술이 땡기는 고기튀김.",
-      img:["seongbuk-andong-1.jpg","seongbuk-andong-2.jpg"]},
-     {n:"성한숯불갈비", k:"돼지갈비 1인분 15,000", addr:"서울 성북구 보문로13길 4",
-      d:"그냥 돼지갈비 No. 양념게장(밑반찬) + 솥밥(유료) + 후식냉면(서비스, 물냉·비냉 선택 가능). 숯불에 굽는 돼지갈비라 미쳤음.",
-      img:["seongbuk-seonghan.jpg"]},
-     {n:"시골청국장", k:"삼겹살 1인분 16,000 · 청국장 9,000", addr:"서울 중구 다산로44길 5",
-      d:"삼겹살 집인데 청국장이 더 맛있음. 연탄불에 굽는 고기라 삼겹살도 맛도리.",
-      img:[]}],
-   spots:[
-     {n:"성북천", k:"산책 · 벚꽃 명소", addr:"서울 성북구 보문동4가 51-1",
-      d:"숨은 벚꽃 명소. 천 따라 분위기 좋은 음식점이 많다. 환승연애 희두·나연 커플 촬영 장소도 있음.",
-      img:["seongbuk-cheon.jpg"]}]},
+  <script>
+    /* ================== 데이터 ================== */
+    const S = [
+      {
+        n: "성북", st: "성북역", line: "찐로컬선 기점", km: 0, pres: "황준성", x: 206, y: 110,
+        memo: "고대 앞 골목의 불맛 잡채밥으로 시작해서, 성북천 벚꽃길 산책으로 끝나는 코스다.",
+        tags: ["잡채밥", "숯불 돼지갈비", "청국장", "성북천 벚꽃"],
+        shops: [
+          {
+            n: "안동반점", k: "잡채밥 10,000 · 고기튀김(소) 15,000", addr: "서울 성북구 고려대로1길 35-1",
+            d: "고추기름에 버무린 불맛 가득 잡채밥 레전드. 술이 땡기는 고기튀김.",
+            img: ["seongbuk-andong-1.jpg", "seongbuk-andong-2.jpg"]
+          },
+          {
+            n: "성한숯불갈비", k: "돼지갈비 1인분 15,000", addr: "서울 성북구 보문로13길 4",
+            d: "그냥 돼지갈비 No. 양념게장(밑반찬) + 솥밥(유료) + 후식냉면(서비스, 물냉·비냉 선택 가능). 숯불에 굽는 돼지갈비라 미쳤음.",
+            img: ["seongbuk-seonghan.jpg"]
+          },
+          {
+            n: "시골청국장", k: "삼겹살 1인분 16,000 · 청국장 9,000", addr: "서울 중구 다산로44길 5",
+            d: "삼겹살 집인데 청국장이 더 맛있음. 연탄불에 굽는 고기라 삼겹살도 맛도리.",
+            img: []
+          }],
+        spots: [
+          {
+            n: "성북천", k: "산책 · 벚꽃 명소", addr: "서울 성북구 보문동4가 51-1",
+            d: "숨은 벚꽃 명소. 천 따라 분위기 좋은 음식점이 많다. 환승연애 희두·나연 커플 촬영 장소도 있음.",
+            img: ["seongbuk-cheon.jpg"]
+          }]
+      },
 
-  {n:"신촌", st:"신촌역", line:"찐로컬선 · 연희·연남·이대 포함", km:9, pres:"김준학", x:183, y:131,
-   memo:"연희동, 연남동, 이대까지 전부 신촌 생활권이다. 걸어서 다 먹을 수 있다.",
-   tags:["연어초밥","대방어","숙성 삼겹살","조각피자"],
-   shops:[
-     {n:"연어초밥 (이대)", k:"생연어+연어 불초밥 10p 13,500", addr:"서울 서대문구 이화여대1길 42-1 3층",
-      d:"괜찮은 가격에 싱싱한 연어초밥을 먹을 수 있는 연어초밥 전문점. (일·월 휴무)",
-      img:["sinchon-salmon.jpg"]},
-     {n:"회뜨는총각 (연남동)", k:"대방어+매운탕 65,000 · 우럭+광어+숭어 40,000", addr:"서울 마포구 동교로 260 1층",
-      d:"연남동치고 적당한 가격에 맛있는 방어를 먹을 수 있는 맛집.",
-      img:["sinchon-hoe.jpg"]},
-     {n:"더도이축산직영점 신촌점", k:"숙성生삼겹살 100g 3,990 (첫 주문 500g)", addr:"서울 서대문구 연세로7길 24 1층",
-      d:"인기가 많아져서 웨이팅이 생기긴 했지만 여전히 신촌 가격 대비 삼겹살집 1등.",
-      img:["sinchon-dodoi.jpg"]},
-     {n:"열대야 맥주", k:"페퍼로니 피자 1조각 4,000", addr:"서울 서대문구 연세로4길 26 지하1층",
-      d:"주문하면 따뜻하게 다시 구워 주셔서 바삭하고 따뜻한 피자를 먹을 수 있다. 가끔 사장님께서 영화도 틀어주시고, 구비된 책들도 읽을 수 있다. 분위기가 좋다.",
-      img:["sinchon-yeoldaeya-1.jpg","sinchon-yeoldaeya-2.jpg"]},
-     {n:"그 외 술집·먹거리", k:"신촌 · 연희동 · 연남동 추천 목록", addr:"신촌 · 연희동 · 연남동 일대",
-      d:"투비위드유(술) — 분위기가 좋고 신청곡을 받아준다. 송학(술) — 연대포·포석정 같은 민속주점이 유명해 사람은 적은 편이지만 닭도리탕과 칵테일 소주가 맛있다. 여우골초밥 — 참치초밥이 맛있다. 기중상점(술) — 너드커넥션이 단골이었던 분위기 좋은 술집. 그 밖에 신미불닭발, 연희옥(국밥), 명성양꼬치, 오향만두, 파이홀(카페), 연희노가리, 담산(등갈비찜), 마우디 브런치.",
-      img:[]}],
-   spots:[
-     {n:"창천근린공원", k:"산책 스팟", addr:"서울 서대문구 창천동 4-55",
-      d:"경의선 숲길을 가봤다면 다른 산책 코스로 한번쯤 가볼 만한 곳. 오르막길 중간 카페 '바람'에서 경치를 보며 쉬어 갈 수 있고, 풍차가 있는 정상 전망이 좋다.",
-      img:["sinchon-changcheon.jpg"]},
-     {n:"라이카 시네마", k:"예술영화전용관", addr:"서울 서대문구 연희로8길 18 스페이스독",
-      d:"연희동 최초의 영화관이자 예술영화전용관. 연희동을 방문한다면 영화를 볼만한 곳.",
-      img:["sinchon-laika.jpg"]},
-     {n:"그 외 볼거리", k:"산책·나들이 코스", addr:"신촌 · 연희동 · 연남동 일대",
-      d:"연희동 카페거리, 경의선 숲길과 연남동 거리, 현대백화점·유플렉스, 버스킹, 안산 등산, 대학교 산책길(연세대 청송대·언더우드가 기념관, 이화여대 ECC), 연희문학창작촌.",
-      img:[]}]},
+      {
+        n: "신촌", st: "신촌역", line: "찐로컬선 · 연희·연남·이대 포함", km: 9, pres: "김준학", x: 183, y: 131,
+        memo: "연희동, 연남동, 이대까지 전부 신촌 생활권이다. 걸어서 다 먹을 수 있다.",
+        tags: ["연어초밥", "대방어", "숙성 삼겹살", "조각피자"],
+        shops: [
+          {
+            n: "연어초밥 (이대)", k: "생연어+연어 불초밥 10p 13,500", addr: "서울 서대문구 이화여대1길 42-1 3층",
+            d: "괜찮은 가격에 싱싱한 연어초밥을 먹을 수 있는 연어초밥 전문점. (일·월 휴무)",
+            img: ["sinchon-salmon.jpg"]
+          },
+          {
+            n: "회뜨는총각 (연남동)", k: "대방어+매운탕 65,000 · 우럭+광어+숭어 40,000", addr: "서울 마포구 동교로 260 1층",
+            d: "연남동치고 적당한 가격에 맛있는 방어를 먹을 수 있는 맛집.",
+            img: ["sinchon-hoe.jpg"]
+          },
+          {
+            n: "더도이축산직영점 신촌점", k: "숙성生삼겹살 100g 3,990 (첫 주문 500g)", addr: "서울 서대문구 연세로7길 24 1층",
+            d: "인기가 많아져서 웨이팅이 생기긴 했지만 여전히 신촌 가격 대비 삼겹살집 1등.",
+            img: ["sinchon-dodoi.jpg"]
+          },
+          {
+            n: "열대야 맥주", k: "페퍼로니 피자 1조각 4,000", addr: "서울 서대문구 연세로4길 26 지하1층",
+            d: "주문하면 따뜻하게 다시 구워 주셔서 바삭하고 따뜻한 피자를 먹을 수 있다. 가끔 사장님께서 영화도 틀어주시고, 구비된 책들도 읽을 수 있다. 분위기가 좋다.",
+            img: ["sinchon-yeoldaeya-1.jpg", "sinchon-yeoldaeya-2.jpg"]
+          },
+          {
+            n: "그 외 술집·먹거리", k: "신촌 · 연희동 · 연남동 추천 목록", addr: "신촌 · 연희동 · 연남동 일대",
+            d: "투비위드유(술) — 분위기가 좋고 신청곡을 받아준다. 송학(술) — 연대포·포석정 같은 민속주점이 유명해 사람은 적은 편이지만 닭도리탕과 칵테일 소주가 맛있다. 여우골초밥 — 참치초밥이 맛있다. 기중상점(술) — 너드커넥션이 단골이었던 분위기 좋은 술집. 그 밖에 신미불닭발, 연희옥(국밥), 명성양꼬치, 오향만두, 파이홀(카페), 연희노가리, 담산(등갈비찜), 마우디 브런치.",
+            img: []
+          }],
+        spots: [
+          {
+            n: "창천근린공원", k: "산책 스팟", addr: "서울 서대문구 창천동 4-55",
+            d: "경의선 숲길을 가봤다면 다른 산책 코스로 한번쯤 가볼 만한 곳. 오르막길 중간 카페 '바람'에서 경치를 보며 쉬어 갈 수 있고, 풍차가 있는 정상 전망이 좋다.",
+            img: ["sinchon-changcheon.jpg"]
+          },
+          {
+            n: "라이카 시네마", k: "예술영화전용관", addr: "서울 서대문구 연희로8길 18 스페이스독",
+            d: "연희동 최초의 영화관이자 예술영화전용관. 연희동을 방문한다면 영화를 볼만한 곳.",
+            img: ["sinchon-laika.jpg"]
+          },
+          {
+            n: "그 외 볼거리", k: "산책·나들이 코스", addr: "신촌 · 연희동 · 연남동 일대",
+            d: "연희동 카페거리, 경의선 숲길과 연남동 거리, 현대백화점·유플렉스, 버스킹, 안산 등산, 대학교 산책길(연세대 청송대·언더우드가 기념관, 이화여대 ECC), 연희문학창작촌.",
+            img: []
+          }]
+      },
 
-  {n:"역삼", st:"역삼역", line:"찐로컬선", km:58, pres:"손영주", x:219, y:151,
-   memo:"도심 속 가정집 닭볶음탕에 퇴근 후 한잔, 마무리는 선정릉 산책이다.",
-   tags:["닭볶음탕","뼈구이","선정릉 산책"],
-   shops:[
-     {n:"고갯마루", k:"닭볶음탕", addr:"서울 강남구 테헤란로28길 27",
-      d:"도심 속 가정집 스타일 식당. 매콤한 국물, 퇴근 후 한잔.",
-      img:["yeoksam-gogaetmaru-1.jpg","yeoksam-gogaetmaru-2.jpg"]},
-     {n:"뼈다구집정해장 역삼직영점", k:"뼈구이", addr:"서울 강남구 언주로85길 13 1층 107호",
-      d:"매콤 달달한 뼈구이. 파스타도 있고, 분모자도 추가 가능!",
-      img:["yeoksam-bbyeodagu.jpg"]}],
-   spots:[
-     {n:"선정릉", k:"도심 산책 · 06시~21시", addr:"서울 강남구 선릉로100길 1",
-      d:"도심 빌딩 속 여유. 만 24세 이하 입장료 무료!! 운영시간이 06시~21시라 퇴근 후에도 감상 가능.",
-      img:["yeoksam-seonjeongneung.jpg"]}]},
+      {
+        n: "역삼", st: "역삼역", line: "찐로컬선", km: 58, pres: "손영주", x: 219, y: 151,
+        memo: "도심 속 가정집 닭볶음탕에 퇴근 후 한잔, 마무리는 선정릉 산책이다.",
+        tags: ["닭볶음탕", "뼈구이", "선정릉 산책"],
+        shops: [
+          {
+            n: "고갯마루", k: "닭볶음탕", addr: "서울 강남구 테헤란로28길 27",
+            d: "도심 속 가정집 스타일 식당. 매콤한 국물, 퇴근 후 한잔.",
+            img: ["yeoksam-gogaetmaru-1.jpg", "yeoksam-gogaetmaru-2.jpg"]
+          },
+          {
+            n: "뼈다구집정해장 역삼직영점", k: "뼈구이", addr: "서울 강남구 언주로85길 13 1층 107호",
+            d: "매콤 달달한 뼈구이. 파스타도 있고, 분모자도 추가 가능!",
+            img: ["yeoksam-bbyeodagu.jpg"]
+          }],
+        spots: [
+          {
+            n: "선정릉", k: "도심 산책 · 06시~21시", addr: "서울 강남구 선릉로100길 1",
+            d: "도심 빌딩 속 여유. 만 24세 이하 입장료 무료!! 운영시간이 06시~21시라 퇴근 후에도 감상 가능.",
+            img: ["yeoksam-seonjeongneung.jpg"]
+          }]
+      },
 
-  {n:"판교", st:"판교역", line:"테라스지선", km:71, pres:"김다은", x:233, y:173,
-   memo:"밤에는 테라스에서 와인, 낮에는 생크림 케이크. 판교는 디저트가 찐이다.",
-   tags:["와인 테라스","당근케이크","생크림 케이크"],
-   shops:[
-     {n:"rufxxx", k:"와인 · 흑맥주", addr:"경기 성남시 분당구 백현동 585-3",
-      d:"야외 테라스가 있어 밤에 간단한 와인과 케이크 먹으러 오기에 분위기가 너무 좋다. 극단에서 운영하는 가게라 이전에는 공연도 했다.",
-      img:["pangyo-rufxxx-1.jpg","pangyo-rufxxx-2.jpg"]},
-     {n:"세시셀라", k:"당근케이크 9,900", addr:"경기 성남시 분당구 분당내곡로 151 아브뉴프랑 1층",
-      d:"크림치즈가 아닌 생크림 베이스 당근케이크!",
-      img:["pangyo-cecicela.jpg"]},
-     {n:"make a cake", k:"망고·초코·초코바나나 생크림 케이크 (1호 평균 70,000)", addr:"경기 성남시 분당구 동판교로177번길 25 아비뉴프랑판교점",
-      d:"별다른 장식 없이 심플한 디자인이지만 생크림 맛이 훌륭함. 당도와 점도가 완벽해 달아 보이는 이름에도 적당히 담백하고 부드러운 맛.",
-      img:["pangyo-makeacake.jpg"]}],
-   spots:[
-     {n:"판교 현대백화점", k:"쇼핑 · 미술관 · 영화관", addr:"경기 성남시 분당구 판교역로146번길 20",
-      d:"백화점이 커서 쇼핑 외에 미술관이나 영화관, 친구들과의 모임에 모두 적합하다.",
-      img:["pangyo-hyundai.jpg"]}]},
+      {
+        n: "판교", st: "판교역", line: "테라스지선", km: 71, pres: "김다은", x: 233, y: 173,
+        memo: "밤에는 테라스에서 와인, 낮에는 생크림 케이크. 판교는 디저트가 찐이다.",
+        tags: ["와인 테라스", "당근케이크", "생크림 케이크"],
+        shops: [
+          {
+            n: "Loop", k: "와인 · 흑맥주", addr: "경기 성남시 분당구 백현동 585-3",
+            d: "야외 테라스가 있어 밤에 간단한 와인과 케이크 먹으러 오기에 분위기가 너무 좋다. 극단에서 운영하는 가게라 이전에는 공연도 했다.",
+            img: ["pangyo-loop-1.jpg", "pangyo-loop-2.jpg"]
+          },
+          {
+            n: "세시셀라", k: "당근케이크 9,900", addr: "경기 성남시 분당구 분당내곡로 151 아브뉴프랑 1층",
+            d: "크림치즈가 아닌 생크림 베이스 당근케이크!",
+            img: ["pangyo-cecicela.jpg"]
+          },
+          {
+            n: "make a cake", k: "망고·초코·초코바나나 생크림 케이크 (1호 평균 70,000)", addr: "경기 성남시 분당구 동판교로177번길 25 아비뉴프랑판교점",
+            d: "별다른 장식 없이 심플한 디자인이지만 생크림 맛이 훌륭함. 당도와 점도가 완벽해 달아 보이는 이름에도 적당히 담백하고 부드러운 맛.",
+            img: ["pangyo-makeacake.jpg"]
+          }],
+        spots: [
+          {
+            n: "판교 현대백화점", k: "쇼핑 · 미술관 · 영화관", addr: "경기 성남시 분당구 판교역로146번길 20",
+            d: "백화점이 커서 쇼핑 외에 미술관이나 영화관, 친구들과의 모임에 모두 적합하다.",
+            img: ["pangyo-hyundai.jpg"]
+          }]
+      },
 
-  {n:"수원", st:"수원역", line:"경기남부지선", km:95, pres:"김다은·이은수", x:216, y:196,
-   memo:"아는 맛집이 없어 새로 오픈한 곳만 골랐다. 수원 잘 아는 분들도 아직 안 가봤을 곳들.",
-   tags:["이베리코","퓨전양식","참치"],
-   shops:[
-     {n:"운화로", k:"삼겹살 16,000 · 목살 16,000", addr:"수원 · 수원시청역 근처",
-      d:"수원시청역 근처에 새로 문을 연 이베리코 전문점. 삼겹살과 목살을 팻말로 구분해 내주고 밑반찬이 푸짐하다.",
-      img:["suwon-unhwaro-1.jpg","suwon-unhwaro-2.jpg"]},
-     {n:"이프리", k:"봉골레칼국수 13,900 · 칼치속젓파스타 16,900", addr:"수원 · 행궁동",
-      d:"행궁동의 퓨전양식집. 칼국수와 파스타를 섞은 메뉴 구성이 낯설면서도 잘 맞는다.",
-      img:["suwon-ipri-1.jpg","suwon-ipri-2.jpg"]},
-     {n:"카미참치", k:"참치 전문점", addr:"수원 · 영통역",
-      d:"영통역 참치 전문점. 부위별로 얼음 위에 깔아 내주는 구성이 푸짐하다.",
-      img:["suwon-kamichamchi.jpg"]}],
-   spots:[]},
+      {
+        n: "수원", st: "수원역", line: "경기남부지선", km: 95, pres: "김다은·이은수", x: 216, y: 196,
+        memo: "87년부터 점심만 파는 국밥집부터 늘 웨이팅인 곱창집까지, 수원 사람들이 가는 곳으로 골랐다.",
+        tags: ["수육백반", "황소곱창", "화이트롤"],
+        shops: [
+          {
+            n: "태화장", k: "수육백반 12,000", addr: "수원 · 아주대 앞",
+            d: "1987년부터 영업한 로컬 노포. 수육과 사골국물이 함께 나오는 수육백반이 대표메뉴이고 돼지국밥·내장국밥 같은 일반 국밥도 판다. 점심 장사만 하니 웨이팅과 조기 품절에 주의.",
+            img: ["suwon-taehwajang-1.jpg", "suwon-taehwajang-2.jpg"]
+          },
+          {
+            n: "땡이네 소곱창", k: "황소곱창 28,000", addr: "수원 · 망포역 앞",
+            d: "항상 웨이팅이 있는 곱창 맛집. 곱창도 맛있지만 마무리 볶음밥이 진짜라는 평이 많다. 18번 넘게 다시 찾은 단골 후기가 붙어 있을 정도.",
+            img: ["suwon-ddaengi-1.jpg", "suwon-ddaengi-2.jpg"]
+          },
+          {
+            n: "하얀 풍차", k: "화이트롤 · 카스테라 · 생크림빵", addr: "수원 · 망포역 앞",
+            d: "수원에서 유명한 빵집. 생크림에 슈크림과 연유를 더한 화이트롤이 간판인데 느끼하지 않다. 다른 빵도 종류가 많고 케이크도 유명하다.",
+            img: ["suwon-whitewindmill-1.jpg", "suwon-whitewindmill-2.jpg", "suwon-whitewindmill-3.jpg"]
+          }],
+        spots: []
+      },
 
-  {n:"포항", st:"포항역", line:"동해미각선", km:391, pres:"이정현·이규형", x:371, y:291,
-   memo:"물회는 육수 없이 고추장에 먼저 비벼 먹는 게 정통 포항식이다.",
-   tags:["고추장 물회","스페이스워크"],
-   shops:[
-     {n:"새포항물회집", k:"포항식 고추장 물회", addr:"경북 포항시 북구 삼호로 65",
-      d:"육수 없이 특제 고추장 양념에 신선한 자연산 횟감을 먼저 비벼 먹는 정통 포항식을 고수하는 40년 전통 로컬 맛집. '백종원의 3대 천왕'에 소개되어 깊은 감칠맛을 전국적으로 인정받았고, 쫄깃한 식감과 함께 포항 오리지널 고추장 물회의 진수를 경험할 수 있다.",
-      img:["pohang-mulhoe.jpg"]}],
-   spots:[
-     {n:"환호공원 스페이스워크", k:"무료 입장 랜드마크", addr:"경북 포항시 북구 환호공원길 30",
-      d:"2021년 11월 개장, 누적 방문객 400만 명을 돌파한 포항 대표 랜드마크. 국내 최대 규모의 체험형 철제 조형물로, 333m 트랙을 직접 걸어 올라가며 영일대 바다와 포항 도심을 파노라마 뷰로 감상할 수 있다.",
-      img:["pohang-spacewalk.jpg"]}]},
+      {
+        n: "포항", st: "포항역", line: "동해미각선", km: 391, pres: "이정현·이규형", x: 371, y: 291,
+        memo: "물회는 육수 없이 고추장에 먼저 비벼 먹는 게 정통 포항식이다.",
+        tags: ["고추장 물회", "스페이스워크"],
+        shops: [
+          {
+            n: "새포항물회집", k: "포항식 고추장 물회", addr: "경북 포항시 북구 삼호로 65",
+            d: "육수 없이 특제 고추장 양념에 신선한 자연산 횟감을 먼저 비벼 먹는 정통 포항식을 고수하는 40년 전통 로컬 맛집. '백종원의 3대 천왕'에 소개되어 깊은 감칠맛을 전국적으로 인정받았고, 쫄깃한 식감과 함께 포항 오리지널 고추장 물회의 진수를 경험할 수 있다.",
+            img: ["pohang-mulhoe.jpg"]
+          }],
+        spots: [
+          {
+            n: "환호공원 스페이스워크", k: "무료 입장 랜드마크", addr: "경북 포항시 북구 환호공원길 30",
+            d: "2021년 11월 개장, 누적 방문객 400만 명을 돌파한 포항 대표 랜드마크. 국내 최대 규모의 체험형 철제 조형물로, 333m 트랙을 직접 걸어 올라가며 영일대 바다와 포항 도심을 파노라마 뷰로 감상할 수 있다.",
+            img: ["pohang-spacewalk.jpg"]
+          }]
+      },
 
-  {n:"대구", st:"대구역", line:"맛도리선", km:432, pres:"이정현·이규형", x:331.7, y:313,
-   memo:"군만두는 필수⭐️, 야끼우동은 오픈런. 대구는 노포가 찐이다.",
-   tags:["군만두","무침회","판초밥","야끼우동","소금빵"],
-   shops:[
-     {n:"영생덕", k:"군만두 8,000", addr:"대구 중구 종로 39",
-      d:"50년 전통, 화교 출신 사장님이 운영하시는 중식 노포. 군만두를 필수⭐️⭐️⭐️⭐️로 시키고 나머지 식사류는 취향껏 시키길 추천.",
-      img:["daegu-yeongsaengdeok-1.jpg","daegu-yeongsaengdeok-2.jpg"]},
-     {n:"호남원조식당", k:"호남무침회 21,000 · 납작만두 4,000", addr:"대구 서구 달구벌대로375길 26-1",
-      d:"1968년 호남원조식당에서 최초로 선보인 무침회. 전현무계획에 나옴!! 납작만두에 싸먹으면 레전드 맛도리 무침회.",
-      img:["daegu-honam.jpg"]},
-     {n:"후꾸스시 시부야", k:"시부야스페셜스시 30,000", addr:"대구 중구 달구벌대로443길 9 1층",
-      d:"대구 레전드 맛도리 판초밥. 한 점 한 점 사라질 때마다 아쉬워서 눈물이 날 지경. 오마카세는 부담스럽고 저렴한 초밥집은 싫을 때 적당히 가기 좋은 판초밥집.",
-      img:["daegu-fuku.jpg"]},
-     {n:"중화반점", k:"야끼우동 13,000", addr:"대구 중구 중앙대로 406-12",
-      d:"대구 오면 야끼우동 먹어줘야 함. 원조 야끼우동집이니 오픈런 추천!! 1인 1야끼우동에 탕수육 추가하길. +) 경상도 가면 중화비빔밥도 꼭, 갱상도 중화비빔밥이 찐임.",
-      img:["daegu-junghwa.jpg"]},
-     {n:"소베", k:"소금빵 2,600 · 명란소금빵", addr:"대구 중구 중앙대로79길 6 1층",
-      d:"소금빵으로 유명한 대구 베이커리. 명란소금빵도 인기.",
-      img:[]}],
-   spots:[
-     {n:"두류공원 야외음악당", k:"피크닉 · 불꽃놀이", addr:"대구 달서구 공원순환로 36",
-      d:"대구 피크닉 명소. 이월드 옆이라 불꽃놀이 감상 가능(불꽃놀이가 목적이면 228자유광장이 더 잘 보임). 봄에는 벚꽃이 피고 여름에는 치맥페스티벌이 열려 즐길 거리가 많다.",
-      img:["daegu-duryu.jpg"]}]},
+      {
+        n: "대구", st: "대구역", line: "맛도리선", km: 432, pres: "이정현·이규형", x: 331.7, y: 313,
+        memo: "군만두는 필수⭐️, 야끼우동은 오픈런. 대구는 노포가 찐이다.",
+        tags: ["군만두", "무침회", "판초밥", "야끼우동", "소금빵"],
+        shops: [
+          {
+            n: "영생덕", k: "군만두 8,000", addr: "대구 중구 종로 39",
+            d: "50년 전통, 화교 출신 사장님이 운영하시는 중식 노포. 군만두를 필수⭐️⭐️⭐️⭐️로 시키고 나머지 식사류는 취향껏 시키길 추천.",
+            img: ["daegu-yeongsaengdeok-1.jpg", "daegu-yeongsaengdeok-2.jpg"]
+          },
+          {
+            n: "호남원조식당", k: "호남무침회 21,000 · 납작만두 4,000", addr: "대구 서구 달구벌대로375길 26-1",
+            d: "1968년 호남원조식당에서 최초로 선보인 무침회. 전현무계획에 나옴!! 납작만두에 싸먹으면 레전드 맛도리 무침회.",
+            img: ["daegu-honam.jpg"]
+          },
+          {
+            n: "후꾸스시 시부야", k: "시부야스페셜스시 30,000", addr: "대구 중구 달구벌대로443길 9 1층",
+            d: "대구 레전드 맛도리 판초밥. 한 점 한 점 사라질 때마다 아쉬워서 눈물이 날 지경. 오마카세는 부담스럽고 저렴한 초밥집은 싫을 때 적당히 가기 좋은 판초밥집.",
+            img: ["daegu-fuku.jpg"]
+          },
+          {
+            n: "중화반점", k: "야끼우동 13,000", addr: "대구 중구 중앙대로 406-12",
+            d: "대구 오면 야끼우동 먹어줘야 함. 원조 야끼우동집이니 오픈런 추천!! 1인 1야끼우동에 탕수육 추가하길. +) 경상도 가면 중화비빔밥도 꼭, 갱상도 중화비빔밥이 찐임.",
+            img: ["daegu-junghwa.jpg"]
+          },
+          {
+            n: "소베", k: "소금빵 2,600 · 명란소금빵", addr: "대구 중구 중앙대로79길 6 1층",
+            d: "소금빵으로 유명한 대구 베이커리. 명란소금빵도 인기.",
+            img: []
+          }],
+        spots: [
+          {
+            n: "두류공원 야외음악당", k: "피크닉 · 불꽃놀이", addr: "대구 달서구 공원순환로 36",
+            d: "대구 피크닉 명소. 이월드 옆이라 불꽃놀이 감상 가능(불꽃놀이가 목적이면 228자유광장이 더 잘 보임). 봄에는 벚꽃이 피고 여름에는 치맥페스티벌이 열려 즐길 거리가 많다.",
+            img: ["daegu-duryu.jpg"]
+          }]
+      },
 
-  {n:"진주", st:"진주역", line:"남도지선", km:512, pres:"안준우·송재명", x:297, y:397,
-   memo:"타코, 불맛 짬뽕, 수제버거. 진주는 의외로 다국적 맛도리 도시다.",
-   tags:["퀘사디아","불맛 짬뽕","수제버거"],
-   shops:[
-     {n:"홈리스타코", k:"퀘사디아", addr:"경남 진주시 진주대로516번길 6-3 2층",
-      d:"멕시코 현지인이 추천한 퀘사디아 맛집. 김치퀘사디아, Korean grill 화이타 등 한국인 특화 메뉴도 선택 가능.",
-      img:["jinju-homelesstaco.jpg"]},
-     {n:"짬뽕공장", k:"짬뽕 · 크림 짬뽕", addr:"경남 진주시 진주대로516번길 15",
-      d:"사장님 맘대로 장사하는 분위기에서 나오는 맛집의 향기. 불맛이 살아있는 짬뽕.",
-      img:["jinju-jjamppong.jpg"]},
-     {n:"디어버거", k:"찐더블치즈버거", addr:"경남 진주시 가좌길 18-1",
-      d:"지나가면서 나는 패티 냄새에 못 이겨 결국 들어가게 되는 마법 같은 수제버거 맛집. 갓 만든 게 맛있으니 매장에서 먹는 걸 추천. 수제버거치고 나쁘지 않은 가격이라 학생에게 인기가 많다.",
-      img:["jinju-dearburger.jpg"]}],
-   spots:[
-     {n:"월아산 숲속의 진주", k:"캠핑 · 야간 경관", addr:"경남 진주시 진성면 달음산로 313",
-      d:"숲속에 꾸며진 캠핑장이자 공원. 낮에는 꽃구경, 밤에는 각종 조명으로 다양한 경관을 동시에 감상할 수 있다. (대중교통 접근성이 떨어져 차량 운행 필수)",
-      img:["jinju-wolasan.jpg"]}]},
+      {
+        n: "진주", st: "진주역", line: "남도지선", km: 512, pres: "안준우·송재명", x: 297, y: 397,
+        memo: "타코, 불맛 짬뽕, 수제버거. 진주는 의외로 다국적 맛도리 도시다.",
+        tags: ["퀘사디아", "불맛 짬뽕", "수제버거"],
+        shops: [
+          {
+            n: "홈리스타코", k: "퀘사디아", addr: "경남 진주시 진주대로516번길 6-3 2층",
+            d: "멕시코 현지인이 추천한 퀘사디아 맛집. 김치퀘사디아, Korean grill 화이타 등 한국인 특화 메뉴도 선택 가능.",
+            img: ["jinju-homelesstaco.jpg"]
+          },
+          {
+            n: "짬뽕공장", k: "짬뽕 · 크림 짬뽕", addr: "경남 진주시 진주대로516번길 15",
+            d: "사장님 맘대로 장사하는 분위기에서 나오는 맛집의 향기. 불맛이 살아있는 짬뽕.",
+            img: ["jinju-jjamppong.jpg"]
+          },
+          {
+            n: "디어버거", k: "찐더블치즈버거", addr: "경남 진주시 가좌길 18-1",
+            d: "지나가면서 나는 패티 냄새에 못 이겨 결국 들어가게 되는 마법 같은 수제버거 맛집. 갓 만든 게 맛있으니 매장에서 먹는 걸 추천. 수제버거치고 나쁘지 않은 가격이라 학생에게 인기가 많다.",
+            img: ["jinju-dearburger.jpg"]
+          }],
+        spots: [
+          {
+            n: "월아산 숲속의 진주", k: "캠핑 · 야간 경관", addr: "경남 진주시 진성면 달음산로 313",
+            d: "숲속에 꾸며진 캠핑장이자 공원. 낮에는 꽃구경, 밤에는 각종 조명으로 다양한 경관을 동시에 감상할 수 있다. (대중교통 접근성이 떨어져 차량 운행 필수)",
+            img: ["jinju-wolasan.jpg"]
+          }]
+      },
 
-  {n:"거제", st:"거제역", line:"섬끝선 종점", km:548, pres:"안준우·송재명", x:319, y:429,
-   memo:"산낙지는 참숯에 구워 먹는다. 후식으로 쫀드기랑 팥빙수도 주신다.",
-   tags:["산낙지 숯불구이","닭갈비","브런치","몽돌해변"],
-   shops:[
-     {n:"희희낙락", k:"산낙지 숯불구이", addr:"경남 거제시 중곡로3길 22-1",
-      d:"국내산 산낙지를 참숯불에 구워 먹는 요리. 쫀드기랑 팥빙수도 주심.",
-      img:["geoje-heeheenakrak.jpg","geoje-heeheenakrak-2.jpg","geoje-heeheenakrak-3.jpg"]},
-     {n:"수나로이", k:"에그 샌드위치 11,000 · 감자뇨끼 16,500", addr:"경남 거제시 동상명진길 119-1",
-      d:"브런치하기 좋은 곳. 샌드위치가 지림.",
-      img:["geoje-sunaroi-1.jpg","geoje-sunaroi-2.jpg"]},
-     {n:"춘천왕닭갈비 고현본점", k:"닭갈비 13,000 · 볶음밥 2,500 · 우동사리 3,000", addr:"경남 거제시 거제중앙로20길 16",
-      d:"닭갈비랑 볶음밥은 당연히 맛있고, 우동사리를 좋아한다면 최대한 많이 추가하길 추천.",
-      img:["geoje-chuncheon-1.jpg","geoje-chuncheon-2.jpg"]},
-     {n:"충남식당", k:"내장국밥 9,000", addr:"경남 거제시 거제중앙로 1883-2",
-      d:"토렴식 국밥. 원이 추천 맛집.",
-      img:["geoje-chungnam.jpg"]}],
-   spots:[
-     {n:"외도 보타니아", k:"해상농원", addr:"경남 거제시 외도길 17",
-      d:"뷰가 죽임. 구조라–외도, 와현항–외도 두 코스 중 하나로 배를 타야 들어갈 수 있다.",
-      img:["geoje-oedo.jpg"]},
-     {n:"바람의 언덕", k:"언덕 뷰 스팟", addr:"경남 거제시 남부면 갈곶리 산 14-47",
-      d:"사방으로 바다가 보여 시원한 느낌이 든다. 근처에 신선대가 있는데 시간은 꽤 걸리지만 가면 좋은 스팟.",
-      img:["geoje-baram.jpg"]},
-     {n:"학동흑진주몽돌해수욕장", k:"몽돌 해변", addr:"경남 거제시 동부면 학동리",
-      d:"검고 둥근 몽돌이 특징이며 사람이 별로 없다.",
-      img:["geoje-hakdong.jpg"]},
-     {n:"P-ark", k:"초대형 복합문화 카페", addr:"부산 영도구 해양로195번길 180",
-      d:"부산 초대형 카페로 각종 전시회나 팝업이 동시에 열리는 복합문화공간, 오션뷰. (접근성이 떨어져 차량 추천, 살벌한 커피 가격, 오션뷰가 약간은 항구·조선소 뷰일 수 있음)",
-      img:["geoje-park.jpg"]}]}
-];
+      {
+        n: "거제", st: "거제역", line: "섬끝선 종점", km: 548, pres: "안준우·송재명", x: 319, y: 429,
+        memo: "산낙지는 참숯에 구워 먹는다. 후식으로 쫀드기랑 팥빙수도 주신다.",
+        tags: ["산낙지 숯불구이", "닭갈비", "브런치", "몽돌해변"],
+        shops: [
+          {
+            n: "희희낙락", k: "산낙지 숯불구이", addr: "경남 거제시 중곡로3길 22-1",
+            d: "국내산 산낙지를 참숯불에 구워 먹는 요리. 쫀드기랑 팥빙수도 주심.",
+            img: ["geoje-heeheenakrak.jpg", "geoje-heeheenakrak-2.jpg", "geoje-heeheenakrak-3.jpg"]
+          },
+          {
+            n: "수나로이", k: "에그 샌드위치 11,000 · 감자뇨끼 16,500", addr: "경남 거제시 동상명진길 119-1",
+            d: "브런치하기 좋은 곳. 샌드위치가 지림.",
+            img: ["geoje-sunaroi-1.jpg", "geoje-sunaroi-2.jpg"]
+          },
+          {
+            n: "춘천왕닭갈비 고현본점", k: "닭갈비 13,000 · 볶음밥 2,500 · 우동사리 3,000", addr: "경남 거제시 거제중앙로20길 16",
+            d: "닭갈비랑 볶음밥은 당연히 맛있고, 우동사리를 좋아한다면 최대한 많이 추가하길 추천.",
+            img: ["geoje-chuncheon-1.jpg", "geoje-chuncheon-2.jpg"]
+          },
+          {
+            n: "충남식당", k: "내장국밥 9,000", addr: "경남 거제시 거제중앙로 1883-2",
+            d: "토렴식 국밥. 원이 추천 맛집.",
+            img: ["geoje-chungnam.jpg"]
+          }],
+        spots: [
+          {
+            n: "외도 보타니아", k: "해상농원", addr: "경남 거제시 외도길 17",
+            d: "뷰가 죽임. 구조라–외도, 와현항–외도 두 코스 중 하나로 배를 타야 들어갈 수 있다.",
+            img: ["geoje-oedo.jpg"]
+          },
+          {
+            n: "바람의 언덕", k: "언덕 뷰 스팟", addr: "경남 거제시 남부면 갈곶리 산 14-47",
+            d: "사방으로 바다가 보여 시원한 느낌이 든다. 근처에 신선대가 있는데 시간은 꽤 걸리지만 가면 좋은 스팟.",
+            img: ["geoje-baram.jpg"]
+          },
+          {
+            n: "학동흑진주몽돌해수욕장", k: "몽돌 해변", addr: "경남 거제시 동부면 학동리",
+            d: "검고 둥근 몽돌이 특징이며 사람이 별로 없다.",
+            img: ["geoje-hakdong.jpg"]
+          },
+          {
+            n: "P-ark", k: "초대형 복합문화 카페", addr: "부산 영도구 해양로195번길 180",
+            d: "부산 초대형 카페로 각종 전시회나 팝업이 동시에 열리는 복합문화공간, 오션뷰. (접근성이 떨어져 차량 추천, 살벌한 커피 가격, 오션뷰가 약간은 항구·조선소 뷰일 수 있음)",
+            img: ["geoje-park.jpg"]
+          }]
+      }
+    ];
 
-const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-if(RM) document.body.classList.add('nomotion');
+    const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (RM) document.body.classList.add('nomotion');
 
-/* ================== 노선 경로 ================== */
-function smooth(pts){
-  let d = `M ${pts[0].x} ${pts[0].y}`;
-  for(let i=0;i<pts.length-1;i++){
-    const p0=pts[i-1]||pts[i], p1=pts[i], p2=pts[i+1], p3=pts[i+2]||p2;
-    const c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
-    const c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
-    d+=` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
-  }
-  return d;
-}
-const route = document.getElementById('route');
-const routeDone = document.getElementById('routeDone');
-const dAttr = smooth(S);
-route.setAttribute('d', dAttr);
-routeDone.setAttribute('d', dAttr);
-const TOTAL = route.getTotalLength();
-routeDone.style.strokeDasharray = TOTAL;
-routeDone.style.strokeDashoffset = TOTAL;
+    /* ================== 노선 경로 ================== */
+    function smooth(pts) {
+      let d = `M ${pts[0].x} ${pts[0].y}`;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+        const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
+        const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+        d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+      }
+      return d;
+    }
+    const route = document.getElementById('route');
+    const routeDone = document.getElementById('routeDone');
+    const dAttr = smooth(S);
+    route.setAttribute('d', dAttr);
+    routeDone.setAttribute('d', dAttr);
+    const TOTAL = route.getTotalLength();
+    routeDone.style.strokeDasharray = TOTAL;
+    routeDone.style.strokeDashoffset = TOTAL;
 
-// 각 역이 경로 상 어느 길이에 있는지 계산
-const LEN = S.map(s=>{
-  let best=0, bd=1e9;
-  for(let l=0;l<=TOTAL;l+=1){
-    const p=route.getPointAtLength(l);
-    const dd=(p.x-s.x)**2+(p.y-s.y)**2;
-    if(dd<bd){bd=dd;best=l;}
-  }
-  return best;
-});
+    // 각 역이 경로 상 어느 길이에 있는지 계산
+    const LEN = S.map(s => {
+      let best = 0, bd = 1e9;
+      for (let l = 0; l <= TOTAL; l += 1) {
+        const p = route.getPointAtLength(l);
+        const dd = (p.x - s.x) ** 2 + (p.y - s.y) ** 2;
+        if (dd < bd) { bd = dd; best = l; }
+      }
+      return best;
+    });
 
-/* ================== 역 마커 ================== */
-const NS='http://www.w3.org/2000/svg';
-const gStations = document.getElementById('stations');
-const markers = S.map((s,i)=>{
-  const g=document.createElementNS(NS,'g');
-  g.setAttribute('class','stn');
-  g.setAttribute('tabindex','0');
-  g.setAttribute('role','button');
-  g.setAttribute('aria-label',`${s.n} ${s.st}`);
-  // 라벨 방향: 지도 오른쪽 역은 왼쪽에 라벨
-  const left = s.x > 300;
-  const ax = left ? -13 : 13;
-  const anchor = left ? 'end' : 'start';
-  g.innerHTML = `
+    /* ================== 역 마커 ================== */
+    const NS = 'http://www.w3.org/2000/svg';
+    const gStations = document.getElementById('stations');
+    const markers = S.map((s, i) => {
+      const g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'stn');
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('role', 'button');
+      g.setAttribute('aria-label', `${s.n} ${s.st}`);
+      // 라벨 방향: 지도 오른쪽 역은 왼쪽에 라벨
+      const left = s.x > 300;
+      const ax = left ? -13 : 13;
+      const anchor = left ? 'end' : 'start';
+      g.innerHTML = `
     <circle class="ring" cx="0" cy="0" r="9"></circle>
     <circle class="stn-dot" cx="0" cy="0" r="5.5"></circle>
     <text class="stn-lab" x="${ax}" y="1" text-anchor="${anchor}">${s.n}</text>
     <text class="stn-sub" x="${ax}" y="12" text-anchor="${anchor}">${s.st.toUpperCase()} · ${s.km}KM</text>
     <circle class="stn-hit" cx="0" cy="0" r="17"></circle>`;
-  g.addEventListener('click',()=>goTo(i));
-  g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();goTo(i);}});
-  gStations.append(g);
-  return g;
-});
+      g.addEventListener('click', () => goTo(i));
+      g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goTo(i); } });
+      gStations.append(g);
+      return g;
+    });
 
-/* ================== 기차 ================== */
-const gTrain = document.getElementById('train');
-gTrain.innerHTML = `
+    /* ================== 기차 ================== */
+    const gTrain = document.getElementById('train');
+    gTrain.innerHTML = `
   <g id="tr">
     <ellipse cx="0" cy="9" rx="15" ry="4" fill="#16283F" opacity=".16"/>
     <rect x="-14" y="-7" width="26" height="14" rx="3" fill="#B0313B" stroke="#16283F" stroke-width="1.4"/>
@@ -640,363 +1826,389 @@ gTrain.innerHTML = `
     <circle cx="-8" cy="8" r="2.6" fill="#16283F"/>
     <circle cx="6" cy="8" r="2.6" fill="#16283F"/>
   </g>`;
-const tr = document.getElementById('tr');
+    const tr = document.getElementById('tr');
 
-/* ================== 뷰포트 / 줌 ================== */
-const VB={x:118,y:22,w:306,h:580};
-const CX=VB.x+VB.w/2, CY=VB.y+VB.h/2;
-const MIN_Z=0.45, MAX_Z=5;
-const viewport=document.getElementById('viewport');
-let scale=1, fx=CX, fy=CY;
+    /* ================== 뷰포트 / 줌 ================== */
+    const VB = { x: 118, y: 22, w: 306, h: 580 };
+    const CX = VB.x + VB.w / 2, CY = VB.y + VB.h / 2;
+    const MIN_Z = 0.45, MAX_Z = 5;
+    const viewport = document.getElementById('viewport');
+    let scale = 1, fx = CX, fy = CY;
 
-function applyView(){
-  viewport.style.transform=`translate(${CX}px,${CY}px) scale(${scale}) translate(${-fx}px,${-fy}px)`;
-  // 확대·축소해도 역 이름과 기차 크기는 일정하게. 단 많이 축소하면 라벨이 겹치므로 살짝만 키움
-  const inv = scale>=1 ? 1/scale : Math.pow(1/scale, .55);
-  markers.forEach((m,i)=>m.setAttribute('transform',`translate(${S[i].x},${S[i].y}) scale(${inv})`));
-  document.getElementById('zlev').textContent = Math.round(scale*100)+'%';
-  drawTrain(curLen, curAng);
-}
-function setZoom(z, focus){
-  scale=Math.min(MAX_Z,Math.max(MIN_Z,z));
-  if(scale<=1){fx=CX;fy=CY;}          // 축소 상태에선 항상 전국이 가운데
-  else if(focus){fx=focus.x;fy=focus.y;}
-  applyView();
-}
-document.getElementById('zin').onclick =()=>setZoom(scale*1.55, route.getPointAtLength(curLen));
-document.getElementById('zout').onclick=()=>setZoom(scale/1.55, route.getPointAtLength(curLen));
-document.getElementById('zreset').onclick=()=>setZoom(1);
-
-const svgEl=document.getElementById('svg');
-svgEl.addEventListener('wheel',e=>{
-  e.preventDefault();
-  setZoom(scale * (e.deltaY<0?1.16:1/1.16), route.getPointAtLength(curLen));
-},{passive:false});
-
-/* 확대 상태에서 끌어서 이동 */
-let drag=null;
-svgEl.addEventListener('pointerdown',e=>{
-  if(scale<=1 || e.target.closest('.stn')) return;
-  drag={sx:e.clientX, sy:e.clientY, fx, fy, k:VB.w/svgEl.getBoundingClientRect().width};
-  viewport.style.transition='none';
-  svgEl.classList.add('dragging'); svgEl.setPointerCapture(e.pointerId);
-});
-svgEl.addEventListener('pointermove',e=>{
-  if(!drag) return;
-  fx = drag.fx - (e.clientX-drag.sx)*drag.k/scale;
-  fy = drag.fy - (e.clientY-drag.sy)*drag.k/scale;
-  applyView();
-});
-['pointerup','pointercancel'].forEach(t=>svgEl.addEventListener(t,()=>{
-  if(!drag) return;
-  drag=null; viewport.style.transition=''; svgEl.classList.remove('dragging');
-}));
-
-/* ================== 이동 ================== */
-let cur=0, curLen=LEN[0], curAng=0, anim=null;
-
-/* 화면 전환은 지연 실행이라, 도중에 다른 곳으로 이동하면 뒤늦게 엉뚱한 화면 위로 튀어나온다.
-   항상 가장 마지막 예약 하나만 살아남도록 핸들을 공유한다 */
-let pending=null;
-function schedule(fn,ms){ clearTimeout(pending); pending=setTimeout(fn,ms); }
-function cancelPending(){ clearTimeout(pending); pending=null; }
-
-/* 다음/이전 역으로. 키보드·리모컨과 소개 화면의 '다음 역' 버튼이 공유한다 */
-function step(d){
-  if(anim) return;                        // 이동 중에는 무시
-  const i=cur+d;
-  if(i<0||i>=S.length) return;            // 양끝에서는 정지
-  sheet.classList.remove('open');
-  closeQuiz(false);                       // 열려 있으면 유튜브까지 정리
-  goTo(i);
-}
-
-function drawTrain(len, ang){
-  const p=route.getPointAtLength(len);
-  const inv=1/scale;
-  tr.setAttribute('transform',`translate(${p.x},${p.y}) scale(${inv}) rotate(${ang})`);
-  routeDone.style.strokeDashoffset = TOTAL - len;
-}
-function angleAt(len){
-  const a=route.getPointAtLength(Math.max(0,len-2));
-  const b=route.getPointAtLength(Math.min(TOTAL,len+2));
-  return Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;
-}
-
-const stat=document.getElementById('stat');
-const prog=document.getElementById('prog');
-
-function goTo(i){
-  // 이미 정차 중인 역을 다시 클릭해도 퀴즈부터. 소개만 볼 땐 패널의 버튼을 쓰면 된다
-  if(i===cur && !anim){ openQuiz(i); return; }
-  cancelAnimationFrame(anim); cancelPending();
-  const from=curLen, to=LEN[i], dist=Math.abs(to-from);
-  const dur = RM ? 0 : Math.min(3400, 700 + dist*3.2);
-  const t0=performance.now();
-  const dir = to>from ? '남행' : '북행';
-  stat.innerHTML = `<b>운행 중</b> · ${S[cur].n} → ${S[i].n} · ${dir}`;
-  markers.forEach(m=>m.classList.remove('here'));
-
-  function frame(t){
-    const k = dur===0 ? 1 : Math.min(1,(t-t0)/dur);
-    const e = k<.5 ? 2*k*k : 1-((-2*k+2)**2)/2;   // ease-in-out
-    curLen = from + (to-from)*e;
-    curAng = angleAt(curLen) + (to<from?180:0);
-    drawTrain(curLen, curAng);
-    if(scale>1){ const p=route.getPointAtLength(curLen); fx=p.x; fy=p.y; applyView(); }
-    if(k<1){ anim=requestAnimationFrame(frame); }
-    else{
-      anim=null; cur=i;
-      arrive(i);
-      // 도착하면 소개보다 퀴즈가 먼저 뜬다. 퀴즈를 마치거나 건너뛰면 소개로 이동
-      schedule(()=>openQuiz(i), 260);
+    function applyView() {
+      viewport.style.transform = `translate(${CX}px,${CY}px) scale(${scale}) translate(${-fx}px,${-fy}px)`;
+      // 확대·축소해도 역 이름과 기차 크기는 일정하게. 단 많이 축소하면 라벨이 겹치므로 살짝만 키움
+      const inv = scale >= 1 ? 1 / scale : Math.pow(1 / scale, .55);
+      markers.forEach((m, i) => m.setAttribute('transform', `translate(${S[i].x},${S[i].y}) scale(${inv})`));
+      document.getElementById('zlev').textContent = Math.round(scale * 100) + '%';
+      drawTrain(curLen, curAng);
     }
-  }
-  anim=requestAnimationFrame(frame);
-}
+    function setZoom(z, focus) {
+      scale = Math.min(MAX_Z, Math.max(MIN_Z, z));
+      if (scale <= 1) { fx = CX; fy = CY; }          // 축소 상태에선 항상 전국이 가운데
+      else if (focus) { fx = focus.x; fy = focus.y; }
+      applyView();
+    }
+    document.getElementById('zin').onclick = () => setZoom(scale * 1.55, route.getPointAtLength(curLen));
+    document.getElementById('zout').onclick = () => setZoom(scale / 1.55, route.getPointAtLength(curLen));
+    document.getElementById('zreset').onclick = () => setZoom(1);
 
-function arrive(i){
-  const s=S[i];
-  stat.innerHTML = `<b>정차 중</b> · ${s.st}`;
-  prog.textContent = `${i+1} / 9`;
-  document.getElementById('sel').value = i;
-  markers.forEach((m,j)=>{
-    m.classList.toggle('here', j===i);
-    m.classList.toggle('visited', j<=i);
-  });
-  renderPanel(i);
-}
+    const svgEl = document.getElementById('svg');
+    svgEl.addEventListener('wheel', e => {
+      e.preventDefault();
+      setZoom(scale * (e.deltaY < 0 ? 1.16 : 1 / 1.16), route.getPointAtLength(curLen));
+    }, { passive: false });
 
-/* ================== 패널 ================== */
-const pbody=document.getElementById('pbody');
-function renderPanel(i){
-  const s=S[i];
-  pbody.innerHTML = `
+    /* 확대 상태에서 끌어서 이동 */
+    let drag = null;
+    svgEl.addEventListener('pointerdown', e => {
+      if (scale <= 1 || e.target.closest('.stn')) return;
+      drag = { sx: e.clientX, sy: e.clientY, fx, fy, k: VB.w / svgEl.getBoundingClientRect().width };
+      viewport.style.transition = 'none';
+      svgEl.classList.add('dragging'); svgEl.setPointerCapture(e.pointerId);
+    });
+    svgEl.addEventListener('pointermove', e => {
+      if (!drag) return;
+      fx = drag.fx - (e.clientX - drag.sx) * drag.k / scale;
+      fy = drag.fy - (e.clientY - drag.sy) * drag.k / scale;
+      applyView();
+    });
+    ['pointerup', 'pointercancel'].forEach(t => svgEl.addEventListener(t, () => {
+      if (!drag) return;
+      drag = null; viewport.style.transition = ''; svgEl.classList.remove('dragging');
+    }));
+
+    /* ================== 이동 ================== */
+    let cur = 0, curLen = LEN[0], curAng = 0, anim = null;
+
+    /* 화면 전환은 지연 실행이라, 도중에 다른 곳으로 이동하면 뒤늦게 엉뚱한 화면 위로 튀어나온다.
+       항상 가장 마지막 예약 하나만 살아남도록 핸들을 공유한다 */
+    let pending = null;
+    function schedule(fn, ms) { clearTimeout(pending); pending = setTimeout(fn, ms); }
+    function cancelPending() { clearTimeout(pending); pending = null; }
+
+    /* 다음/이전 역으로. 키보드·리모컨과 소개 화면의 '다음 역' 버튼이 공유한다 */
+    function step(d) {
+      if (anim) return;                        // 이동 중에는 무시
+      const i = cur + d;
+      if (i < 0 || i >= S.length) return;            // 양끝에서는 정지
+      sheet.classList.remove('open');
+      closeQuiz(false);                       // 열려 있으면 유튜브까지 정리
+      goTo(i);
+    }
+
+    function drawTrain(len, ang) {
+      const p = route.getPointAtLength(len);
+      const inv = 1 / scale;
+      tr.setAttribute('transform', `translate(${p.x},${p.y}) scale(${inv}) rotate(${ang})`);
+      routeDone.style.strokeDashoffset = TOTAL - len;
+    }
+    function angleAt(len) {
+      const a = route.getPointAtLength(Math.max(0, len - 2));
+      const b = route.getPointAtLength(Math.min(TOTAL, len + 2));
+      return Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+    }
+
+    const stat = document.getElementById('stat');
+    const prog = document.getElementById('prog');
+
+    function goTo(i) {
+      // 이미 정차 중인 역을 다시 클릭해도 퀴즈부터. 소개만 볼 땐 패널의 버튼을 쓰면 된다
+      if (i === cur && !anim) { openQuiz(i); return; }
+      cancelAnimationFrame(anim); cancelPending();
+      const from = curLen, to = LEN[i], dist = Math.abs(to - from);
+      const dur = RM ? 0 : Math.min(3400, 700 + dist * 3.2);
+      const t0 = performance.now();
+      const dir = to > from ? '남행' : '북행';
+      stat.innerHTML = `<b>운행 중</b> · ${S[cur].n} → ${S[i].n} · ${dir}`;
+      markers.forEach(m => m.classList.remove('here'));
+
+      function frame(t) {
+        const k = dur === 0 ? 1 : Math.min(1, (t - t0) / dur);
+        const e = k < .5 ? 2 * k * k : 1 - ((-2 * k + 2) ** 2) / 2;   // ease-in-out
+        curLen = from + (to - from) * e;
+        curAng = angleAt(curLen) + (to < from ? 180 : 0);
+        drawTrain(curLen, curAng);
+        if (scale > 1) { const p = route.getPointAtLength(curLen); fx = p.x; fy = p.y; applyView(); }
+        if (k < 1) { anim = requestAnimationFrame(frame); }
+        else {
+          anim = null; cur = i;
+          arrive(i);
+          // 도착하면 소개보다 퀴즈가 먼저 뜬다. 퀴즈를 마치거나 건너뛰면 소개로 이동
+          schedule(() => openQuiz(i), 260);
+        }
+      }
+      anim = requestAnimationFrame(frame);
+    }
+
+    function arrive(i) {
+      const s = S[i];
+      stat.innerHTML = `<b>정차 중</b> · ${s.st}`;
+      prog.textContent = `${i + 1} / 9`;
+      document.getElementById('sel').value = i;
+      markers.forEach((m, j) => {
+        m.classList.toggle('here', j === i);
+        m.classList.toggle('visited', j <= i);
+      });
+      renderPanel(i);
+    }
+
+    /* ================== 패널 ================== */
+    const pbody = document.getElementById('pbody');
+    function renderPanel(i) {
+      const s = S[i];
+      pbody.innerHTML = `
     <div class="fade">
-      <p class="p-seq">STOP ${String(i+1).padStart(2,'0')} · ${s.st.toUpperCase()}</p>
+      <p class="p-seq">STOP ${String(i + 1).padStart(2, '0')} · ${s.st.toUpperCase()}</p>
       <h2 class="p-name">${s.n}<b>역</b></h2>
       <p class="p-line">${s.line}</p>
       <div class="p-facts">
         <div><span>서울 기점</span><strong>${s.km} km</strong></div>
         <div><span>발표</span><strong class="sm">${s.pres}</strong></div>
-        <div><span>기록한 곳</span><strong>${s.shops.length+s.spots.length}곳</strong></div>
+        <div><span>기록한 곳</span><strong>${s.shops.length + s.spots.length}곳</strong></div>
       </div>
       <p class="p-memo">${s.memo}</p>
-      <div class="p-tags">${s.tags.map(t=>`<span>${t}</span>`).join('')}</div>
+      <div class="p-tags">${s.tags.map(t => `<span>${t}</span>`).join('')}</div>
       <button class="p-cta" id="cta">${s.n} 찐 맛집·관광 스팟 보기</button>
     </div>`;
-  document.getElementById('cta').onclick=()=>openSheet(i);
-}
+      document.getElementById('cta').onclick = () => openSheet(i);
+    }
 
-/* ================== 상세 ================== */
-const sheet=document.getElementById('sheet');
-function shopHTML(sh){
-  return `
+    /* ================== 상세 ================== */
+    const sheet = document.getElementById('sheet');
+    function shopHTML(sh) {
+      return `
     <article class="shop">
       <h3>${sh.n}</h3>
       <p class="kind">${sh.k}</p>
       <p>${sh.d}</p>
       <span class="again">📍 ${sh.addr}</span>
-      ${sh.img.length ? `<div class="shop-imgs">${sh.img.map(f=>`<img src="images/${f}" alt="${sh.n}" loading="lazy">`).join('')}</div>` : ''}
+      ${sh.img.length ? `<div class="shop-imgs">${sh.img.map(f => `<img src="images/${f}" alt="${sh.n}" loading="lazy">`).join('')}</div>` : ''}
     </article>`;
-}
-function openSheet(i){
-  const s=S[i];
-  document.getElementById('shTitle').textContent = `${s.n}, 여가 찐이다!`;
-  document.getElementById('shSub').textContent = `${s.st} · ${s.line} · 발표 ${s.pres}`;
-  document.getElementById('shBody').innerHTML =
-    `<p class="sec-lab">찐 맛집 — ${s.shops.length}곳</p>` +
-    s.shops.map(shopHTML).join('') +
-    (s.spots.length ? `<p class="sec-lab">찐 관광 스팟 — ${s.spots.length}곳</p>` + s.spots.map(shopHTML).join('') : '');
-  const nx=document.getElementById('shNext'), last=i>=S.length-1;
-  nx.textContent = last ? '여정 끝 · 전체 노선 보기' : `다음 역: ${S[i+1].n} →`;
-  nx.onclick = last
-    ? ()=>{ sheet.classList.remove('open'); setZoom(1); }
-    : ()=>step(1);
-  sheet.classList.add('open');
-  sheet.querySelector('.closebtn').focus();
-}
-sheet.addEventListener('click',e=>{ if(e.target.hasAttribute('data-close')) sheet.classList.remove('open'); });
-
-/* ================== 사진 확대 보기 ================== */
-const lb=document.getElementById('lightbox'), lbImg=document.getElementById('lbImg'), lbCap=document.getElementById('lbCap');
-const lbPrev=document.getElementById('lbPrev'), lbNext=document.getElementById('lbNext');
-let lbList=[], lbIdx=0;
-
-document.getElementById('shBody').addEventListener('click',e=>{
-  const img=e.target.closest('.shop-imgs img');
-  if(!img) return;
-  lbList=[...document.querySelectorAll('#shBody .shop-imgs img')];
-  lbIdx=Math.max(0,lbList.indexOf(img));
-  lbShow();
-  lb.classList.add('open');
-  document.getElementById('lbClose').focus();
-});
-function lbShow(){
-  const im=lbList[lbIdx]; if(!im) return;
-  lbImg.src=im.src; lbImg.alt=im.alt;
-  const name=im.closest('.shop')?.querySelector('h3')?.textContent||'';
-  lbCap.textContent=lbList.length>1 ? `${name} · ${lbIdx+1} / ${lbList.length}` : name;
-  const multi=lbList.length>1;
-  lbPrev.hidden=lbNext.hidden=!multi;
-}
-function lbMove(d){ lbIdx=(lbIdx+d+lbList.length)%lbList.length; lbShow(); }
-function lbClose(){ lb.classList.remove('open'); lbImg.removeAttribute('src'); }
-lbPrev.onclick=()=>lbMove(-1);
-lbNext.onclick=()=>lbMove(1);
-document.getElementById('lbClose').onclick=lbClose;
-lb.addEventListener('click',e=>{ if(e.target===lb||e.target===lbImg) lbClose(); });
-
-/* 발표자가 리모컨·키보드만으로 진행할 수 있도록, 위에 떠 있는 화면부터 순서대로 키를 처리한다.
-   프레젠테이션 리모컨은 보통 PageDown/PageUp 또는 방향키를 보낸다 */
-const KEY_NEXT=['ArrowRight','PageDown',' ','Spacebar'];
-const KEY_PREV=['ArrowLeft','PageUp'];
-document.addEventListener('keydown',e=>{
-  if(e.metaKey||e.ctrlKey||e.altKey) return;
-  const next=KEY_NEXT.includes(e.key), prev=KEY_PREV.includes(e.key);
-
-  // 1) 주관식 답을 입력하는 중이면 키를 가로채지 않는다 (Space가 역 이동이 되면 안 된다)
-  const t=e.target;
-  if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA')){
-    if(e.key==='Escape') t.blur();
-    return;
-  }
-
-  // 2) 사진 확대 보기
-  if(lb.classList.contains('open')){
-    if(e.key==='Escape'){ e.preventDefault(); lbClose(); }
-    else if(prev){ e.preventDefault(); lbMove(-1); }
-    else if(next){ e.preventDefault(); lbMove(1); }
-    return;
-  }
-
-  // 3) 도착 퀴즈 — 해설이 공개된 뒤에만 다음으로 넘어간다 (답을 건너뛰지 않도록)
-  if(quiz.classList.contains('open')){
-    if(e.key==='Escape'){ e.preventDefault(); closeQuiz(false); return; }
-    if(next){
-      const go=qBody.querySelector('.q-fb.show .q-next');
-      if(go){ e.preventDefault(); go.click(); }
     }
-    return;
-  }
+    function openSheet(i) {
+      const s = S[i];
+      document.getElementById('shTitle').textContent = `${s.n}, 여가 찐이다!`;
+      document.getElementById('shSub').textContent = `${s.st} · ${s.line} · 발표 ${s.pres}`;
+      document.getElementById('shBody').innerHTML =
+        `<p class="sec-lab">찐 맛집 — ${s.shops.length}곳</p>` +
+        s.shops.map(shopHTML).join('') +
+        (s.spots.length ? `<p class="sec-lab">찐 관광 스팟 — ${s.spots.length}곳</p>` + s.spots.map(shopHTML).join('') : '');
+      const nx = document.getElementById('shNext'), last = i >= S.length - 1;
+      nx.textContent = last ? '여정 끝 · 전체 노선 보기' : `다음 역: ${S[i + 1].n} →`;
+      nx.onclick = last
+        ? () => { sheet.classList.remove('open'); setZoom(1); }
+        : () => step(1);
+      sheet.classList.add('open');
+      sheet.querySelector('.closebtn').focus();
+    }
+    sheet.addEventListener('click', e => { if (e.target.hasAttribute('data-close')) sheet.classList.remove('open'); });
 
-  // 4) 지역 소개
-  if(sheet.classList.contains('open')){
-    if(e.key==='Escape'){ sheet.classList.remove('open'); return; }
-    if(next){ e.preventDefault(); step(1); }
-    else if(prev){ e.preventDefault(); step(-1); }
-    return;
-  }
+    /* ================== 사진 확대 보기 ================== */
+    const lb = document.getElementById('lightbox'), lbImg = document.getElementById('lbImg'), lbCap = document.getElementById('lbCap');
+    const lbPrev = document.getElementById('lbPrev'), lbNext = document.getElementById('lbNext');
+    let lbList = [], lbIdx = 0;
 
-  // 5) 출발 화면
-  if(intro.style.display!=='none' && document.body.contains(intro)){
-    if(next){ e.preventDefault(); document.getElementById('introGo').click(); }
-    return;
-  }
+    document.getElementById('shBody').addEventListener('click', e => {
+      const img = e.target.closest('.shop-imgs img');
+      if (!img) return;
+      lbList = [...document.querySelectorAll('#shBody .shop-imgs img')];
+      lbIdx = Math.max(0, lbList.indexOf(img));
+      lbShow();
+      lb.classList.add('open');
+      document.getElementById('lbClose').focus();
+    });
+    function lbShow() {
+      const im = lbList[lbIdx]; if (!im) return;
+      lbImg.src = im.src; lbImg.alt = im.alt;
+      const name = im.closest('.shop')?.querySelector('h3')?.textContent || '';
+      lbCap.textContent = lbList.length > 1 ? `${name} · ${lbIdx + 1} / ${lbList.length}` : name;
+      const multi = lbList.length > 1;
+      lbPrev.hidden = lbNext.hidden = !multi;
+    }
+    function lbMove(d) { lbIdx = (lbIdx + d + lbList.length) % lbList.length; lbShow(); }
+    function lbClose() { lb.classList.remove('open'); lbImg.removeAttribute('src'); }
+    lbPrev.onclick = () => lbMove(-1);
+    lbNext.onclick = () => lbMove(1);
+    document.getElementById('lbClose').onclick = lbClose;
+    lb.addEventListener('click', e => { if (e.target === lb || e.target === lbImg) lbClose(); });
 
-  // 6) 지도
-  if(next){ e.preventDefault(); step(1); }
-  else if(prev){ e.preventDefault(); step(-1); }
-});
+    /* 발표자가 리모컨·키보드만으로 진행할 수 있도록, 위에 떠 있는 화면부터 순서대로 키를 처리한다.
+       프레젠테이션 리모컨은 보통 PageDown/PageUp 또는 방향키를 보낸다 */
+    const KEY_NEXT = ['ArrowRight', 'PageDown', ' ', 'Spacebar'];
+    const KEY_PREV = ['ArrowLeft', 'PageUp'];
+    document.addEventListener('keydown', e => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const next = KEY_NEXT.includes(e.key), prev = KEY_PREV.includes(e.key);
 
-/* ================== 도착 퀴즈 ================== */
-/* t:'mc' 객관식(cards:true=사진 카드형) · t:'ox' OX · t:'input' 주관식(3단계 힌트) ·
-   t:'live' 현장 공개형 · t:'video' 영상 퀴즈
-   q 질문 · img 문제 이미지 · opts 보기 · ans 정답 인덱스 · why 해설 */
-const QUIZ = {
-  성북:[
-    {t:'input', q:"음식 맞추기 — 사진 속 음식은 무엇일까요?",
-     stages:["quiz-seongbuk-z1.jpg","quiz-seongbuk-z2.jpg","seongbuk-andong-1.jpg"],
-     accept:["잡채"], answer:"잡채밥 (잡채덮밥도 인정)",
-     why:"성북 안동반점의 고추기름에 버무린 불맛 가득 잡채밥이다."},
-    {t:'mc', q:"서울의 자치구 총 개수는 몇 개일까요?", card:"quiz-seoul-q1.jpg",
-     hot:[{x:11,y:50,w:36.5,h:18},{x:49.5,y:50,w:36.5,h:18},{x:11,y:70.5,w:36.5,h:18.5},{x:49.5,y:70.5,w:36.5,h:18.5}],
-     opts:["20개","23개","25개","27개"], ans:2,
-     why:"서울은 총 25개 자치구로 이루어져 있다."}],
-  신촌:[
-    {t:'input', q:"음식 맞추기 — 사진 속 음식은 무엇일까요?",
-     stages:["quiz-sinchon-z1.jpg","quiz-sinchon-z2.jpg","sinchon-salmon.jpg"],
-     accept:["연어초밥","연어스시"], answer:"연어초밥",
-     why:"이대 연어초밥 전문점의 생연어+연어 불초밥이다."},
-    {t:'mc', q:"서울의 한강공원은 총 몇 개일까요?", card:"quiz-seoul-q2.jpg",
-     hot:[{x:15,y:55,w:35,h:16},{x:53.5,y:55,w:35.5,h:16},{x:15,y:73,w:35,h:16},{x:53.5,y:73,w:35.5,h:16}],
-     opts:["9개","10개","11개","12개"], ans:2,
-     why:"광나루·잠실·뚝섬·잠원·반포·이촌·여의도·양화·망원·난지·강서, 총 11개다."}],
-  수원:[
-    {t:'mc', q:"경기도의 시(市) 개수는?", card:"quiz-gyeonggi-city.jpg",
-     hot:[{x:14,y:38,w:24,h:22},{x:38.5,y:38,w:22,h:22},{x:62,y:38,w:24,h:22},{x:24,y:63,w:24,h:24},{x:50,y:63,w:24,h:24}],
-     opts:["24개","26개","28개","30개","32개"], ans:2,
-     why:"경기도는 28개의 시와 3개의 군으로 구성되어 있다."}],
-  역삼:[
-    {t:'input', q:"음식 맞추기 — 사진 속 음식은 무엇일까요?",
-     stages:["quiz-yeoksam-z1.jpg","quiz-yeoksam-z2.jpg","yeoksam-bbyeodagu.jpg"],
-     accept:["뼈구이","뼈다구","뼈다귀","등뼈"], answer:"뼈구이",
-     why:"역삼 뼈다구집정해장의 매콤 달달한 뼈구이다."}],
-  판교:[
-    {t:'mc', q:"경기도의 마스코트는 무엇일까요?", cards:true,
-     opts:[
-       {o:"고양고양이", img:"mascot-goyang.png"},
-       {o:"봉공이", img:"mascot-gyeonggi.png"},
-       {o:"정약용", img:"mascot-namyangju.png"},
-       {o:"부천핸썹", img:"mascot-bucheon.png"},
-       {o:"조아용", img:"mascot-yongin.png"}], ans:1,
-     ansCard:"quiz-gyeonggi-answer.jpg",
-     why:"경기도 마스코트는 봉공이! 나머지는 고양고양이=고양시, 정약용=남양주시, 부천핸썹=부천시, 조아용=용인시 마스코트다."}],
-  포항:[
-    {t:'mc', q:"[식문화 퀴즈] 포항 전통 물회를 처음 먹을 때, 넣지 않는 것은 무엇일까요?", card:"quiz-pohang-mulhoe.jpg",
-     hot:[{x:31,y:31,w:23.5,h:13},{x:55,y:31,w:28.5,h:13},{x:31,y:46.5,w:23.5,h:12.5},{x:55,y:46.5,w:28.5,h:12.5}],
-     opts:["🐟 생선","🌶️ 초고추장","💧 육수(물)","🧊 얼음"], ans:2,
-     why:"원래 포항 해녀·선원들이 즐기던 전통 방식은 싱싱한 회, 배, 채소에 고추장만 넣고 쓱쓱 비벼서 비빔회처럼 먼저 먹다가, 나중에 얼음이나 물을 넣어 물회로 즐긴다! 새포항물회집이 바로 이 정통 방식의 물회집."}],
-  대구:[
-    {t:'live', q:"[대구 사투리 퀴즈] 세 가지 '사회' 표현의 뜻을 순서대로 맞춰보세요!", card:"quiz-daegu-satoori.jpg",
-     why:"정답은 이정현 프로가 직접 사투리로 시현하며 현장에서 공개합니다! 🎤"}],
-  진주:[
-    {t:'mc', q:"귀여운 '하모'가 상징하는 지역의 이름은?", img:"mascot-jinju-hamo.png",
-     opts:["합천","밀양","사천","진주"], ans:3,
-     why:"하모는 진주 남강에 사는 수달을 모티브로 한 진주시 관광캐릭터다. '하모'는 '맞다, 그렇지!'라는 뜻의 진주 사투리."},
-    {t:'video', q:"[경상도 사투리 퀴즈] 영상 보고 함께 맞혀보자!",
-     vids:["https://www.youtube.com/embed/xyAPMzk1Dbk?start=40","https://www.youtube.com/embed/-9HfxgZW360"],
-     why:"정답은 영상에서 바로바로 공개! 유튜브에 '경상도 사투리 퀴즈'만 검색해도 하루 종일 퀴즈 가능. 나이쨔~"}],
-  거제:[
-    {t:'ox', q:"서울의 면적은 부산보다 넓다 (O/X)", card:"quiz-geoje-ox.jpg",
-     hot:[{x:4.5,y:28,w:45,h:58},{x:50.5,y:28,w:45,h:58}],
-     opts:["O 그렇다","X 아니다"], ans:1,
-     why:"서울은 약 605.25㎢, 부산은 약 770.17㎢로 부산이 더 넓다."},
-    {t:'mc', q:"다음 중 부산 출신이 아닌 연예인은?", cards:true,
-     opts:[
-       {o:"원우(세븐틴)", img:"celeb-wonwoo.jpg"},
-       {o:"지민(BTS)", img:"celeb-jimin.jpg"},
-       {o:"정국(BTS)", img:"celeb-jungkook.jpg"},
-       {o:"안보현", img:"celeb-ahnbohyun.jpg"}], ans:0,
-     why:"세븐틴 원우는 경남 창원 출신! 지민·정국·안보현은 모두 부산 출신이다."}]
-};
-const quiz=document.getElementById('quiz');
-const qBody=document.getElementById('qBody');
-const STAGE_LABEL=["단계 1/3 · 어려움","단계 2/3 · 보통","단계 3/3 · 쉬움"];
-let qSt=0, qIdx=0, qStageIdx=0;
+      // 1) 주관식 답을 입력하는 중이면 키를 가로채지 않는다 (Space가 역 이동이 되면 안 된다)
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
+        if (e.key === 'Escape') t.blur();
+        return;
+      }
 
-function openQuiz(i){
-  const list=QUIZ[S[i].n];
-  if(!list||!list.length){ openSheet(i); return; }
-  qSt=i; qIdx=0;
-  quiz.classList.add('open');
-  renderQ();
-  quiz.querySelector('.quiz-in').scrollTop=0;
-}
-function closeQuiz(toSheet){
-  quiz.classList.remove('open');
-  qBody.innerHTML='';               // 유튜브 영상 재생 정지
-  if(toSheet) schedule(()=>openSheet(qSt),120);
-}
-function renderQ(){
-  const s=S[qSt], list=QUIZ[s.n], Q=list[qIdx], last=qIdx===list.length-1;
-  qStageIdx=0;
-  document.getElementById('qHead').innerHTML=`${s.n} <b>도착 퀴즈</b>`;
-  document.getElementById('qTag').textContent=`STOP ${String(qSt+1).padStart(2,'0')} · Q ${qIdx+1}/${list.length} · 출제 ${s.pres}`;
-  const nextBtn=`<button class="p-cta q-next" onclick="${last?'closeQuiz(true)':'qNext()'}">${last?`${s.n} 소개 보러가기 →`:'다음 문제 →'}</button>`;
-  let mid='';
-  if(Q.t==='input'){
-    mid=`
+      // 2) 사진 확대 보기
+      if (lb.classList.contains('open')) {
+        if (e.key === 'Escape') { e.preventDefault(); lbClose(); }
+        else if (prev) { e.preventDefault(); lbMove(-1); }
+        else if (next) { e.preventDefault(); lbMove(1); }
+        return;
+      }
+
+      // 3) 도착 퀴즈 — 해설이 공개된 뒤에만 다음으로 넘어간다 (답을 건너뛰지 않도록)
+      if (quiz.classList.contains('open')) {
+        if (e.key === 'Escape') { e.preventDefault(); closeQuiz(false); return; }
+        if (next) {
+          const go = qBody.querySelector('.q-fb.show .q-next');
+          if (go) { e.preventDefault(); go.click(); }
+        }
+        return;
+      }
+
+      // 4) 지역 소개
+      if (sheet.classList.contains('open')) {
+        if (e.key === 'Escape') { sheet.classList.remove('open'); return; }
+        if (next) { e.preventDefault(); step(1); }
+        else if (prev) { e.preventDefault(); step(-1); }
+        return;
+      }
+
+      // 5) 출발 화면
+      if (intro.style.display !== 'none' && document.body.contains(intro)) {
+        if (next) { e.preventDefault(); document.getElementById('introGo').click(); }
+        return;
+      }
+
+      // 6) 지도
+      if (next) { e.preventDefault(); step(1); }
+      else if (prev) { e.preventDefault(); step(-1); }
+    });
+
+    /* ================== 도착 퀴즈 ================== */
+    /* t:'mc' 객관식(cards:true=사진 카드형) · t:'ox' OX · t:'input' 주관식(3단계 힌트) ·
+       t:'live' 현장 공개형 · t:'video' 영상 퀴즈
+       q 질문 · img 문제 이미지 · opts 보기 · ans 정답 인덱스 · why 해설 */
+    const QUIZ = {
+      성북: [
+        {
+          t: 'input', q: "음식 맞추기 — 사진 속 음식은 무엇일까요?",
+          stages: ["quiz-seongbuk-z1.jpg", "quiz-seongbuk-z2.jpg", "seongbuk-andong-1.jpg"],
+          accept: ["잡채밥", "잡채덮밥"], answer: "잡채밥 (잡채덮밥도 인정)",
+          why: "성북 안동반점의 고추기름에 버무린 불맛 가득 잡채밥이다."
+        },
+        {
+          t: 'mc', q: "서울의 자치구 총 개수는 몇 개일까요?", card: "quiz-seoul-q1.jpg",
+          hot: [{ x: 11, y: 50, w: 36.5, h: 18 }, { x: 49.5, y: 50, w: 36.5, h: 18 }, { x: 11, y: 70.5, w: 36.5, h: 18.5 }, { x: 49.5, y: 70.5, w: 36.5, h: 18.5 }],
+          opts: ["20개", "23개", "25개", "27개"], ans: 2,
+          why: "서울은 총 25개 자치구로 이루어져 있다."
+        }],
+      신촌: [
+        {
+          t: 'input', q: "음식 맞추기 — 사진 속 음식은 무엇일까요?",
+          stages: ["quiz-sinchon-z1.jpg", "quiz-sinchon-z2.jpg", "sinchon-salmon.jpg"],
+          accept: ["연어초밥", "연어스시"], answer: "연어초밥",
+          why: "이대 연어초밥 전문점의 생연어+연어 불초밥이다."
+        },
+        {
+          t: 'mc', q: "서울의 한강공원은 총 몇 개일까요?", card: "quiz-seoul-q2.jpg",
+          hot: [{ x: 15, y: 55, w: 35, h: 16 }, { x: 53.5, y: 55, w: 35.5, h: 16 }, { x: 15, y: 73, w: 35, h: 16 }, { x: 53.5, y: 73, w: 35.5, h: 16 }],
+          opts: ["9개", "10개", "11개", "12개"], ans: 2,
+          why: "광나루·잠실·뚝섬·잠원·반포·이촌·여의도·양화·망원·난지·강서, 총 11개다."
+        }],
+      수원: [
+        {
+          t: 'mc', q: "경기도의 시(市) 개수는?", card: "quiz-gyeonggi-city.jpg",
+          hot: [{ x: 14, y: 38, w: 24, h: 22 }, { x: 38.5, y: 38, w: 22, h: 22 }, { x: 62, y: 38, w: 24, h: 22 }, { x: 24, y: 63, w: 24, h: 24 }, { x: 50, y: 63, w: 24, h: 24 }],
+          opts: ["24개", "26개", "28개", "30개", "32개"], ans: 2,
+          why: "경기도는 28개의 시와 3개의 군으로 구성되어 있다."
+        }],
+      역삼: [
+        {
+          t: 'input', q: "음식 맞추기 — 사진 속 음식은 무엇일까요?",
+          stages: ["quiz-yeoksam-z1.jpg", "quiz-yeoksam-z2.jpg", "yeoksam-bbyeodagu.jpg"],
+          accept: ["뼈구이", "뼈다구", "뼈다귀", "등뼈"], answer: "뼈구이",
+          why: "역삼 뼈다구집정해장의 매콤 달달한 뼈구이다."
+        }],
+      판교: [
+        {
+          t: 'mc', q: "경기도의 마스코트는 무엇일까요?", cards: true,
+          opts: [
+            { o: "고양고양이", img: "mascot-goyang.png" },
+            { o: "봉공이", img: "mascot-gyeonggi.png" },
+            { o: "정약용", img: "mascot-namyangju.png" },
+            { o: "부천핸썹", img: "mascot-bucheon.png" },
+            { o: "조아용", img: "mascot-yongin.png" }], ans: 1,
+          ansCard: "quiz-gyeonggi-answer.jpg",
+          why: "경기도 마스코트는 봉공이! 나머지는 고양고양이=고양시, 정약용=남양주시, 부천핸썹=부천시, 조아용=용인시 마스코트다."
+        }],
+      포항: [
+        {
+          t: 'mc', q: "[식문화 퀴즈] 포항 전통 물회를 처음 먹을 때, 넣지 않는 것은 무엇일까요?", card: "quiz-pohang-mulhoe.jpg",
+          hot: [{ x: 31, y: 31, w: 23.5, h: 13 }, { x: 55, y: 31, w: 28.5, h: 13 }, { x: 31, y: 46.5, w: 23.5, h: 12.5 }, { x: 55, y: 46.5, w: 28.5, h: 12.5 }],
+          opts: ["🐟 생선", "🌶️ 초고추장", "💧 육수(물)", "🧊 얼음"], ans: 2,
+          why: "원래 포항 해녀·선원들이 즐기던 전통 방식은 싱싱한 회, 배, 채소에 고추장만 넣고 쓱쓱 비벼서 비빔회처럼 먼저 먹다가, 나중에 얼음이나 물을 넣어 물회로 즐긴다! 새포항물회집이 바로 이 정통 방식의 물회집."
+        }],
+      대구: [
+        {
+          t: 'live', q: "[대구 사투리 퀴즈] 세 가지 '사회' 표현의 뜻을 순서대로 맞춰보세요!", card: "quiz-daegu-satoori.jpg",
+          why: "정답은 이정현 프로가 직접 사투리로 시현하며 현장에서 공개합니다! 🎤"
+        }],
+      진주: [
+        {
+          t: 'mc', q: "귀여운 '하모'가 상징하는 지역의 이름은?", img: "mascot-jinju-hamo.png",
+          opts: ["합천", "밀양", "사천", "진주"], ans: 3,
+          why: "하모는 진주 남강에 사는 수달을 모티브로 한 진주시 관광캐릭터다. '하모'는 '맞다, 그렇지!'라는 뜻의 진주 사투리."
+        },
+        {
+          t: 'video', q: "[경상도 사투리 퀴즈] 영상 보고 함께 맞혀보자!",
+          vids: ["https://www.youtube.com/embed/xyAPMzk1Dbk?start=40", "https://www.youtube.com/embed/-9HfxgZW360"],
+          why: "정답은 영상에서 바로바로 공개! 유튜브에 '경상도 사투리 퀴즈'만 검색해도 하루 종일 퀴즈 가능. 나이쨔~"
+        }],
+      거제: [
+        {
+          t: 'ox', q: "서울의 면적은 부산보다 넓다 (O/X)", card: "quiz-geoje-ox.jpg",
+          hot: [{ x: 4.5, y: 28, w: 45, h: 58 }, { x: 50.5, y: 28, w: 45, h: 58 }],
+          opts: ["O 그렇다", "X 아니다"], ans: 1,
+          why: "서울은 약 605.25㎢, 부산은 약 770.17㎢로 부산이 더 넓다."
+        },
+        {
+          t: 'mc', q: "다음 중 부산 출신이 아닌 연예인은?", cards: true,
+          opts: [
+            { o: "원우(세븐틴)", img: "celeb-wonwoo.jpg" },
+            { o: "지민(BTS)", img: "celeb-jimin.jpg" },
+            { o: "정국(BTS)", img: "celeb-jungkook.jpg" },
+            { o: "안보현", img: "celeb-ahnbohyun.jpg" }], ans: 0,
+          why: "세븐틴 원우는 경남 창원 출신! 지민·정국·안보현은 모두 부산 출신이다."
+        }]
+    };
+    const quiz = document.getElementById('quiz');
+    const qBody = document.getElementById('qBody');
+    const STAGE_LABEL = ["단계 1/3 · 어려움", "단계 2/3 · 보통", "단계 3/3 · 쉬움"];
+    let qSt = 0, qIdx = 0, qStageIdx = 0;
+
+    function openQuiz(i) {
+      const list = QUIZ[S[i].n];
+      if (!list || !list.length) { openSheet(i); return; }
+      qSt = i; qIdx = 0;
+      quiz.classList.add('open');
+      renderQ();
+      quiz.querySelector('.quiz-in').scrollTop = 0;
+    }
+    function closeQuiz(toSheet) {
+      quiz.classList.remove('open');
+      qBody.innerHTML = '';               // 유튜브 영상 재생 정지
+      if (toSheet) schedule(() => openSheet(qSt), 120);
+    }
+    function renderQ() {
+      const s = S[qSt], list = QUIZ[s.n], Q = list[qIdx], last = qIdx === list.length - 1;
+      qStageIdx = 0;
+      document.getElementById('qHead').innerHTML = `${s.n} <b>도착 퀴즈</b>`;
+      document.getElementById('qTag').textContent = `STOP ${String(qSt + 1).padStart(2, '0')} · Q ${qIdx + 1}/${list.length} · 출제 ${s.pres}`;
+      const nextBtn = `<button class="p-cta q-next" onclick="${last ? 'closeQuiz(true)' : 'qNext()'}">${last ? `${s.n} 소개 보러가기 →` : '다음 문제 →'}</button>`;
+      let mid = '';
+      if (Q.t === 'input') {
+        mid = `
       <p class="q-stage" id="qStageLab">${STAGE_LABEL[0]}</p>
       <img class="q-img" id="qStageImg" src="images/${Q.stages[0]}" alt="음식 확대 사진">
       <div class="q-tools" id="qTools">
@@ -1008,146 +2220,147 @@ function renderQ(){
         <button class="q-opt q-go" onclick="qCheck()">정답 확인</button>
       </div>
       <p class="q-miss" id="qMiss">❌ 땡! 다시 도전해보세요</p>`;
-  }else if(Q.t==='live'){
-    mid=`<div class="q-opts"><button class="q-opt q-big" onclick="qReveal(this)">🎤 정답 공개</button></div>`;
-  }else if(Q.t==='video'){
-    mid=`<div class="q-vids">${Q.vids.map(v=>`<iframe src="${v}" title="사투리 퀴즈 영상" allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`).join('')}</div>`;
-  }else{
-    const cls=Q.t==='ox'?' q-big':(Q.cards?' q-card':'');
-    mid=`${Q.img?`<img class="q-img" src="images/${Q.img}" alt="퀴즈 이미지">`:''}
-      ${Q.hot?'':`<div class="q-opts${Q.t==='ox'?' ox':''}${Q.cards?' cards':''}">${Q.opts.map((o,j)=>{
-        const label=Q.cards?o.o:o;
-        const im=Q.cards?`<img src="images/${o.img}" alt="${label}">`:'';
-        return `<button class="q-opt${cls}" onclick="qPick(this,${j})">${im}<span class="q-lab"><span class="qn">${Q.t==='ox'?'':j+1}</span>${label}</span></button>`;
-      }).join('')}</div>`}`;
-  }
-  const fbHead=Q.t==='video'?'진행 안내':(Q.t==='live'?'정답 공개!':(Q.t==='input'?'':'정답! 🎉'));
-  // G팀이 만든 원본 퀴즈 카드는 출제/정답 카드 자리에 그대로 얹는다
-  const cardInner=Q.hot
-    ? `<div class="hotlayer" id="hotLayer"><img src="images/${Q.card}" alt="퀴즈 이미지">
-        ${Q.hot.map((h,j)=>`<button class="hot" style="left:${h.x}%;top:${h.y}%;width:${h.w}%;height:${h.h}%"
+      } else if (Q.t === 'live') {
+        mid = `<div class="q-opts"><button class="q-opt q-big" onclick="qReveal(this)">🎤 정답 공개</button></div>`;
+      } else if (Q.t === 'video') {
+        mid = `<div class="q-vids">${Q.vids.map(v => `<iframe src="${v}" title="사투리 퀴즈 영상" allow="encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>`).join('')}</div>`;
+      } else {
+        const cls = Q.t === 'ox' ? ' q-big' : (Q.cards ? ' q-card' : '');
+        mid = `${Q.img ? `<img class="q-img" src="images/${Q.img}" alt="퀴즈 이미지">` : ''}
+      ${Q.hot ? '' : `<div class="q-opts${Q.t === 'ox' ? ' ox' : ''}${Q.cards ? ' cards' : ''}">${Q.opts.map((o, j) => {
+          const label = Q.cards ? o.o : o;
+          const im = Q.cards ? `<img src="images/${o.img}" alt="${label}">` : '';
+          return `<button class="q-opt${cls}" onclick="qPick(this,${j})">${im}<span class="q-lab"><span class="qn">${Q.t === 'ox' ? '' : j + 1}</span>${label}</span></button>`;
+        }).join('')}</div>`}`;
+      }
+      const fbHead = Q.t === 'video' ? '진행 안내' : (Q.t === 'live' ? '정답 공개!' : (Q.t === 'input' ? '' : '정답! 🎉'));
+      // G팀이 만든 원본 퀴즈 카드는 출제/정답 카드 자리에 그대로 얹는다
+      const cardInner = Q.hot
+        ? `<div class="hotlayer" id="hotLayer"><img src="images/${Q.card}" alt="퀴즈 이미지">
+        ${Q.hot.map((h, j) => `<button class="hot" style="left:${h.x}%;top:${h.y}%;width:${h.w}%;height:${h.h}%"
           aria-label="${Q.opts[j]}" onclick="qPick(this,${j})"><span class="hotmark"></span></button>`).join('')}
        </div><p class="hot-hint">카드 속 보기를 직접 클릭하세요</p>`
-    : `<img src="images/${Q.card}" alt="퀴즈 이미지">`;
-  const card=Q.card?`<figure class="aicard">${cardInner}</figure>`:'';
-  const ansCard=Q.ansCard?`<figure class="aicard"><img src="images/${Q.ansCard}" alt="정답 이미지"></figure>`:'';
-  qBody.innerHTML=`
+        : `<img src="images/${Q.card}" alt="퀴즈 이미지">`;
+      const card = Q.card ? `<figure class="aicard">${cardInner}</figure>` : '';
+      const ansCard = Q.ansCard ? `<figure class="aicard"><img src="images/${Q.ansCard}" alt="정답 이미지"></figure>` : '';
+      qBody.innerHTML = `
     <div class="fade">
       <h3 class="q-title">${Q.q}</h3>
       ${card}
       ${mid}
-      <div class="q-fb${Q.t==='video'?' show':''}" id="qFb">
+      <div class="q-fb${Q.t === 'video' ? ' show' : ''}" id="qFb">
         <b id="qFbHead">${fbHead}</b>
         <p>${Q.why}</p>
         ${ansCard}
         ${nextBtn}
       </div>
     </div>`;
-  if(Q.hot) fitHotLayer();
-  if(Q.t==='input'){
-    const inp=document.getElementById('qInput');
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') qCheck(); });
-  }
-}
-function qPick(btn,j){
-  const Q=QUIZ[S[qSt].n][qIdx];
-  if(j===Q.ans){
-    btn.classList.add('right');
-    qBody.querySelectorAll('.q-opt,.hot').forEach(b=>b.disabled=true);
-    showFb();
-  }else{
-    btn.classList.add('wrong'); btn.disabled=true;
-  }
-}
-function qReveal(btn){
-  btn.disabled=true; btn.classList.add('right');
-  showFb();
-}
-function showFb(){
-  const fb=document.getElementById('qFb');
-  fb.classList.add('show');
-  setTimeout(()=>fb.scrollIntoView({behavior:RM?'auto':'smooth',block:'nearest'}),60);
-}
-function fitHotLayer(){
-  const wrap=document.getElementById('hotLayer'); if(!wrap) return;
-  const img=wrap.querySelector('img');
-  const fit=()=>{ if(img.naturalHeight) wrap.style.maxWidth=`min(100%, ${(img.naturalWidth/img.naturalHeight*62).toFixed(1)}vh)`; };
-  if(img.complete) fit(); else img.addEventListener('load',fit,{once:true});
-}
-function qNorm(v){ return v.replace(/\s+/g,'').toLowerCase(); }
-function qCheck(){
-  const Q=QUIZ[S[qSt].n][qIdx];
-  const inp=document.getElementById('qInput'), v=qNorm(inp.value);
-  if(!v) return;
-  if(Q.accept.some(a=>v.includes(qNorm(a)))){ qWin(); }
-  else{
-    const m=document.getElementById('qMiss');
-    m.classList.remove('show'); void m.offsetWidth; m.classList.add('show');
-    inp.select();
-  }
-}
-function qWin(){
-  const Q=QUIZ[S[qSt].n][qIdx];
-  qStageIdx=Q.stages.length-1;
-  document.getElementById('qStageImg').src=`images/${Q.stages[qStageIdx]}`;
-  document.getElementById('qStageLab').textContent='정답 공개';
-  document.getElementById('qInRow').style.display='none';
-  document.getElementById('qTools').style.display='none';
-  document.getElementById('qMiss').classList.remove('show');
-  document.getElementById('qFbHead').textContent=`정답: ${Q.answer} 🎉`;
-  showFb();
-}
-function qStage(){
-  const Q=QUIZ[S[qSt].n][qIdx];
-  if(qStageIdx>=Q.stages.length-1) return;
-  qStageIdx++;
-  document.getElementById('qStageImg').src=`images/${Q.stages[qStageIdx]}`;
-  document.getElementById('qStageLab').textContent=STAGE_LABEL[qStageIdx];
-  if(qStageIdx===Q.stages.length-1) document.getElementById('qEasier').style.display='none';
-}
-function qNext(){ qIdx++; renderQ(); quiz.querySelector('.quiz-in').scrollTop=0; }
-document.getElementById('qSkip').onclick=()=>closeQuiz(true);
-document.getElementById('qRetry').onclick=()=>{ renderQ(); quiz.querySelector('.quiz-in').scrollTop=0; };
-
-/* ================== 드롭다운 ================== */
-const sel=document.getElementById('sel');
-sel.innerHTML = S.map((s,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} · ${s.n} — ${s.st}</option>`).join('');
-sel.onchange = e => goTo(+e.target.value);
-
-/* ================== 시작 ================== */
-applyView();
-curAng = angleAt(LEN[0]);
-drawTrain(LEN[0], curAng);
-arrive(0);
-
-/* 출발 화면 → 첫 역도 다른 역과 똑같이 '도착 → 퀴즈 → 소개' 순서를 타게 한다 */
-function departTo(i){
-  const p=route.getPointAtLength(LEN[i]);
-  const offX=-52, offY=-46;                      // 북서쪽에서 선로로 진입
-  const ang=Math.atan2(-offY,-offX)*180/Math.PI;
-  const dur=RM?0:1200, t0=performance.now();
-  stat.innerHTML=`<b>운행 중</b> · 출발 → ${S[i].n}`;
-  function frame(t){
-    const k=dur===0?1:Math.min(1,(t-t0)/dur);
-    const e=1-Math.pow(1-k,3);                   // ease-out
-    tr.setAttribute('transform',
-      `translate(${p.x+offX*(1-e)},${p.y+offY*(1-e)}) scale(${1/scale}) rotate(${ang})`);
-    if(k<1) anim=requestAnimationFrame(frame);
-    else{
-      anim=null;
-      curAng=angleAt(LEN[i]);
-      drawTrain(curLen, curAng);
-      arrive(i);
-      schedule(()=>openQuiz(i), 300);
+      if (Q.hot) fitHotLayer();
+      if (Q.t === 'input') {
+        const inp = document.getElementById('qInput');
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') qCheck(); });
+      }
     }
-  }
-  anim=requestAnimationFrame(frame);
-}
-const intro=document.getElementById('intro');
-document.getElementById('introGo').onclick=()=>{
-  intro.classList.add('hide');
-  setTimeout(()=>{ intro.style.display='none'; departTo(0); }, 380);
-};
-</script>
+    function qPick(btn, j) {
+      const Q = QUIZ[S[qSt].n][qIdx];
+      if (j === Q.ans) {
+        btn.classList.add('right');
+        qBody.querySelectorAll('.q-opt,.hot').forEach(b => b.disabled = true);
+        showFb();
+      } else {
+        btn.classList.add('wrong'); btn.disabled = true;
+      }
+    }
+    function qReveal(btn) {
+      btn.disabled = true; btn.classList.add('right');
+      showFb();
+    }
+    function showFb() {
+      const fb = document.getElementById('qFb');
+      fb.classList.add('show');
+      setTimeout(() => fb.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' }), 60);
+    }
+    function fitHotLayer() {
+      const wrap = document.getElementById('hotLayer'); if (!wrap) return;
+      const img = wrap.querySelector('img');
+      const fit = () => { if (img.naturalHeight) wrap.style.maxWidth = `min(100%, ${(img.naturalWidth / img.naturalHeight * 62).toFixed(1)}vh)`; };
+      if (img.complete) fit(); else img.addEventListener('load', fit, { once: true });
+    }
+    function qNorm(v) { return v.replace(/\s+/g, '').toLowerCase(); }
+    function qCheck() {
+      const Q = QUIZ[S[qSt].n][qIdx];
+      const inp = document.getElementById('qInput'), v = qNorm(inp.value);
+      if (!v) return;
+      if (Q.accept.some(a => v.includes(qNorm(a)))) { qWin(); }
+      else {
+        const m = document.getElementById('qMiss');
+        m.classList.remove('show'); void m.offsetWidth; m.classList.add('show');
+        inp.select();
+      }
+    }
+    function qWin() {
+      const Q = QUIZ[S[qSt].n][qIdx];
+      qStageIdx = Q.stages.length - 1;
+      document.getElementById('qStageImg').src = `images/${Q.stages[qStageIdx]}`;
+      document.getElementById('qStageLab').textContent = '정답 공개';
+      document.getElementById('qInRow').style.display = 'none';
+      document.getElementById('qTools').style.display = 'none';
+      document.getElementById('qMiss').classList.remove('show');
+      document.getElementById('qFbHead').textContent = `정답: ${Q.answer} 🎉`;
+      showFb();
+    }
+    function qStage() {
+      const Q = QUIZ[S[qSt].n][qIdx];
+      if (qStageIdx >= Q.stages.length - 1) return;
+      qStageIdx++;
+      document.getElementById('qStageImg').src = `images/${Q.stages[qStageIdx]}`;
+      document.getElementById('qStageLab').textContent = STAGE_LABEL[qStageIdx];
+      if (qStageIdx === Q.stages.length - 1) document.getElementById('qEasier').style.display = 'none';
+    }
+    function qNext() { qIdx++; renderQ(); quiz.querySelector('.quiz-in').scrollTop = 0; }
+    document.getElementById('qSkip').onclick = () => closeQuiz(true);
+    document.getElementById('qRetry').onclick = () => { renderQ(); quiz.querySelector('.quiz-in').scrollTop = 0; };
+
+    /* ================== 드롭다운 ================== */
+    const sel = document.getElementById('sel');
+    sel.innerHTML = S.map((s, i) => `<option value="${i}">${String(i + 1).padStart(2, '0')} · ${s.n} — ${s.st}</option>`).join('');
+    sel.onchange = e => goTo(+e.target.value);
+
+    /* ================== 시작 ================== */
+    applyView();
+    curAng = angleAt(LEN[0]);
+    drawTrain(LEN[0], curAng);
+    arrive(0);
+
+    /* 출발 화면 → 첫 역도 다른 역과 똑같이 '도착 → 퀴즈 → 소개' 순서를 타게 한다 */
+    function departTo(i) {
+      const p = route.getPointAtLength(LEN[i]);
+      const offX = -52, offY = -46;                      // 북서쪽에서 선로로 진입
+      const ang = Math.atan2(-offY, -offX) * 180 / Math.PI;
+      const dur = RM ? 0 : 1200, t0 = performance.now();
+      stat.innerHTML = `<b>운행 중</b> · 출발 → ${S[i].n}`;
+      function frame(t) {
+        const k = dur === 0 ? 1 : Math.min(1, (t - t0) / dur);
+        const e = 1 - Math.pow(1 - k, 3);                   // ease-out
+        tr.setAttribute('transform',
+          `translate(${p.x + offX * (1 - e)},${p.y + offY * (1 - e)}) scale(${1 / scale}) rotate(${ang})`);
+        if (k < 1) anim = requestAnimationFrame(frame);
+        else {
+          anim = null;
+          curAng = angleAt(LEN[i]);
+          drawTrain(curLen, curAng);
+          arrive(i);
+          schedule(() => openQuiz(i), 300);
+        }
+      }
+      anim = requestAnimationFrame(frame);
+    }
+    const intro = document.getElementById('intro');
+    document.getElementById('introGo').onclick = () => {
+      intro.classList.add('hide');
+      setTimeout(() => { intro.style.display = 'none'; departTo(0); }, 380);
+    };
+  </script>
 </body>
+
 </html>
