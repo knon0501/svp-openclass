@@ -390,7 +390,7 @@
 
     .p-facts {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 12px;
       margin: 26px 0;
       padding: 16px 0;
@@ -1971,7 +1971,6 @@
       <p class="p-line">${s.line}</p>
       <div class="p-facts">
         <div><span>서울 기점</span><strong>${s.km} km</strong></div>
-        <div><span>발표</span><strong class="sm">${s.pres}</strong></div>
         <div><span>기록한 곳</span><strong>${s.shops.length + s.spots.length}곳</strong></div>
       </div>
       <p class="p-memo">${s.memo}</p>
@@ -1996,7 +1995,7 @@
     function openSheet(i) {
       const s = S[i];
       document.getElementById('shTitle').textContent = `${s.n}, 여가 찐이다!`;
-      document.getElementById('shSub').textContent = `${s.st} · ${s.line} · 발표 ${s.pres}`;
+      document.getElementById('shSub').textContent = `${s.st} · ${s.line}`;
       document.getElementById('shBody').innerHTML =
         `<p class="sec-lab">찐 맛집 — ${s.shops.length}곳</p>` +
         s.shops.map(shopHTML).join('') +
@@ -2212,7 +2211,7 @@
       const s = S[qSt], list = QUIZ[s.n], Q = list[qIdx], last = qIdx === list.length - 1;
       qStageIdx = 0;
       document.getElementById('qHead').innerHTML = `${s.n} <b>도착 퀴즈</b>`;
-      document.getElementById('qTag').textContent = `STOP ${String(qSt + 1).padStart(2, '0')} · Q ${qIdx + 1}/${list.length} · 출제 ${s.pres}`;
+      document.getElementById('qTag').textContent = `STOP ${String(qSt + 1).padStart(2, '0')} · Q ${qIdx + 1}/${list.length}`;
       const nextBtn = `<button class="p-cta q-next" onclick="${last ? 'closeQuiz(true)' : 'qNext()'}">${last ? `${s.n} 소개 보러가기 →` : '다음 문제 →'}</button>`;
       let mid = '';
       if (Q.t === 'input') {
