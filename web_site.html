@@ -1085,6 +1085,18 @@
       max-width: 70ch
     }
 
+    /* 현장 공개형 정답 — 프로젝터에서 멀리서도 읽히도록 크게.
+       .q-fb p 보다 구체적이어야 글자 크기가 덮이지 않는다 */
+    .q-fb .q-bigans {
+      font-family: "Hahmlet", serif;
+      font-weight: 700;
+      font-size: clamp(44px, 6vw, 84px);
+      letter-spacing: .16em;
+      line-height: 1.1;
+      color: var(--punch);
+      margin: 8px 0 4px
+    }
+
     .q-next {
       width: auto;
       margin-top: 22px;
@@ -2152,7 +2164,8 @@
       대구: [
         {
           t: 'live', q: "[대구 사투리 퀴즈] 세 가지 '사회' 표현의 뜻을 순서대로 맞춰보세요!", card: "quiz-daegu-satoori.jpg",
-          why: "정답은 이정현 프로가 직접 사투리로 시현하며 현장에서 공개합니다! 🎤"
+          answer: "B C A",
+          why: "① 하향 억양은 B(MC 사회자), ② 상향 억양은 C(사회생활), ③ 복합 억양은 A(4회). 이정현 프로가 직접 사투리로 시현합니다! 🎤"
         }],
       진주: [
         {
@@ -2243,6 +2256,8 @@
         : `<img src="images/${Q.card}" alt="퀴즈 이미지">`;
       const card = Q.card ? `<figure class="aicard">${cardInner}</figure>` : '';
       const ansCard = Q.ansCard ? `<figure class="aicard"><img src="images/${Q.ansCard}" alt="정답 이미지"></figure>` : '';
+      // 현장 공개형은 정답 자체가 짧은 기호라 크게 띄운다
+      const bigAns = (Q.t === 'live' && Q.answer) ? `<p class="q-bigans">${Q.answer}</p>` : '';
       qBody.innerHTML = `
     <div class="fade">
       <h3 class="q-title">${Q.q}</h3>
@@ -2250,6 +2265,7 @@
       ${mid}
       <div class="q-fb${Q.t === 'video' ? ' show' : ''}" id="qFb">
         <b id="qFbHead">${fbHead}</b>
+        ${bigAns}
         <p>${Q.why}</p>
         ${ansCard}
         ${nextBtn}
