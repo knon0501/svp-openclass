@@ -766,7 +766,7 @@ function openSheet(i){
   document.getElementById('shBody').innerHTML =
     `<p class="sec-lab">찐 맛집 — ${s.shops.length}곳</p>` +
     s.shops.map(shopHTML).join('') +
-    (s.spots.length ? `<p class="sec-lab">찐 여가 — ${s.spots.length}곳</p>` + s.spots.map(shopHTML).join('') : '');
+    (s.spots.length ? `<p class="sec-lab">찐 관광 스팟 — ${s.spots.length}곳</p>` + s.spots.map(shopHTML).join('') : '');
   sheet.classList.add('open');
   sheet.querySelector('.closebtn').focus();
 }
